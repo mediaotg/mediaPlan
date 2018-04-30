@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/daterangepicker.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/awesomplete.css' %}">
+<link rel="stylesheet" href="{% static 'css/selectize.css' %}">
+<link rel="stylesheet" href="{% static 'css/plans.css' %}">
+{% endblock %}
+
+{% block title %}New Plan{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+  <a href="#" class="step active">Campaign Info<span></span></a>
+  <a href="#" class="step">Designs<span></span></a>
+  <a href="#" class="step">Media Plan<span></span></a>
+</div>
+<div class="main-content">
+  <div class="form edit-form new-plan">
+    <form method="post" class="form" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger" role="alert">
+        {% for error in form.non_field_errors %}
+          <p{% if forloop.last %} class="mb-0" {% endif %}>{{ error }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="form-input input-field {% if form.name.errors %}invalid{% endif %}">
+        {{ form.name.label_tag }}
+        {% render_field form.name type="text" %}
+
+        {% for error in form.name.errors %}
+          <div class="invalid-feedback err-msg">
+            {{ error }}
+          </div> 
+        {% endfor %}
+      </div>
+
+      <div class="form-input input-field {% if form.client.errors %}invalid{% endif %}">
+        {{ form.client.label_tag }}
+
+        <div class="client-wrapper">
+          {% render_field form.client class="client-select" %}
+        </div>
+
+        {% for error in form.client.errors %}
+          <div class="invalid-feedback err-msg">
+            {{ error }}
+          </div> 
+        {% endfor %}
+      </div>
+
+      <div class="form-input input-field {% if form.budget.errors %}invalid{% endif %}">
+        {{ form.budget.label_tag }}
+        {% render_field form.budget type="number" class="has-inner" %}
+        <label class="inner-label">$</label>
+
+        {% for error in form.budget.errors %}
+          <div class="invalid-feedback err-msg">
+            {{ error }}
+          </div> 
+        {% endfor %}
+      </div>
+
+      <div class="line-wrapper">
+        <div class="form-input input-field {% if form.startDate.errors %}invalid{% endif %}">
+          {{ form.startDate.label_tag }}
+          {% render_field form.startDate class="date-picker start" %}
+
+          {% for error in form.startDate.errors %}
+            <div class="invalid-feedback err-msg">
+              {{ error }}
+            </div> 
+          {% endfor %}
+        </div>
+        <div class="line-spacer"></div>
+        <div class="form-input input-field {% if form.endDate.errors %}invalid{% endif %}">
+          {{ form.endDate.label_tag }}
+          {% render_field form.endDate class="date-picker end" %}
+
+          {% for error in form.endDate.errors %}
+            <div class="invalid-feedback err-msg">
+              {{ error }}
+            </div> 
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="form-input input-field">
+        {{ form.audience.label_tag }}
+        <div class="group-table-wrapper">
+          {% render_field form.audience class="target-multi" %}
+        </div>
+      </div>
+
+      <div class="form-input input-field {% if form.designer.errors %}invalid{% endif %}">
+        {{ form.designer.label_tag }}
+        {% render_field form.designer %}
+
+        {% for error in form.designer.errors %}
+          <div class="invalid-feedback err-msg">
+            {{ error }}
+          </div> 
+        {% endfor %}
+      </div>
+      
+    </form>
+
+  </div>
+  <div class="sidebar">
+    <div class="details card">
+      <h3></h3>
+      <p class="client"></p>
+      <p class="date">{{date|date:"F j, Y"}}</p>
+      <p class="starter">John Doe</p>
+    </div>
+    <button class="button" id="continue">Continue</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+    <script src="{% static 'js/awesomplete.min.js' %}"></script>
+    <script src="{% static 'js/jquery.daterangepicker.js' %}"></script>
+    <script src="{% static 'js/selectize.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+          // Campaign Name
+          $('#id_name').change(function(){
+            $('.details.card h3').text($(this).val())
+          })
+
+          $('.client-select').selectize({
+            maxItems: 1
+          })
+
+          // Date Picker
+          $('.date-picker').focus(function(e){
+            $('.date-picker').data('dateRangePicker').close()
+            $(this).data('dateRangePicker').open()
+          })
+
+          $('.date-picker.end').dateRangePicker({
+            autoClose: true,
+            singleDate: true,
+            format: 'YYYY-MM-DD',    
+            showShortcuts: false,
+            singleMonth: true,
+            showTopbar: false
+          })
+
+          var startPicker = $('.date-picker.start').dateRangePicker({
+            autoClose: true,
+            singleDate: true,
+            format: 'YYYY-MM-DD',    
+            showShortcuts: false,
+            singleMonth: true,
+            showTopbar: false
+          }).bind('datepicker-change', function(ev, picker){
+            $('.date-picker.end').data('dateRangePicker').destroy()
+
+            $('.date-picker.end').dateRangePicker({
+              autoClose: true,
+              singleDate: true,
+              format: 'YYYY-MM-DD',    
+              showShortcuts: false,
+              singleMonth: true,
+              showTopbar: false,
+              startDate: picker.value
+            })
+
+            $('.date-picker.end').data('dateRangePicker').open()
+            console.log(picker.value)
+          });
+
+            /* Target Groups */
+            $('.target-multi').selectize({
+              delimiter: ',',
+              persist: false,
+            })
+
+            /* Submit Form */
+            $('#continue').click(function(e){
+                e.preventDefault();
+
+                var data = new FormData($('form')[0]);
+                data.append('starter', 'John Doe');
+                
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'new_plan' %}",
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                }).done(function(data) {
+                  console.log(data);
+                    if(data.code == "200") {
+                        window.location.href = "/plans/media-plans/" + data.plan + "/designs"
+                    } else if(data.code == "300"){
+                      $('.invalid-feedback').remove();
+                      $('.form-input').removeClass('invalid');
+                      $.each(data.errors, function(key, value){
+                        var el = $('#id_' + key);
+                        el.closest('.form-input').addClass('invalid');
+                        el.closest('.form-input').append('<div class="invalid-feedback">' + value + '</div>');
+                      })
+                    }
+                });
+
+            })
+            
+        });
+    </script>
+{% endblock %}

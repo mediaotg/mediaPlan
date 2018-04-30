@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/publications.css' %}">
+{% endblock %}
+
+{% block title %}{{ publication.name }}{% endblock %}
+
+{% block content %}
+<div class="top-wrapper">
+    <div class="searchbar">
+      <input type="text" class="searchbar-input" placeholder="Search" />
+      <a href="#" class="search-button"><i class="fas fa-search"></i></a>
+    </div> 
+    <div class="buttons-wrapper">
+      <a href="{{ publication.pk }}/edit" class="button">Edit Publication</a>
+    </div>
+</div>
+
+<div class="table striped-table main-table">
+    <h5>Rates</h5>
+    <table id="rates-table">
+        <thead>
+            <tr>
+                <td>Page Name</td>
+                <td>ID</td>
+                <td>Dimensions</td>
+                <td>Bleed</td>
+                <td>Price</td>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block javascript %}
+    <script src="http://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function() {
+
+            var data = [];
+            {% for rate in publication.rates.all %}
+                {% if rate.client == None  %}
+                    data.push([{{ rate.pk }}, '{{ rate.rateName }}', '{{ rate.dimensions }}', '{{ rate.bleed }}', '{{ rate.price }}']);
+                {% endif %}
+            {% endfor %}
+            console.log(data);
+
+            var table = $('#rates-table').DataTable({
+                data: data,
+                columnDefs: [
+                    {
+                        render: function(data, type, row) {
+                            console.log(data);
+                            return '<a href="../rates/' + data + '">' + row[1] + '</a>';
+                        },
+                        targets: 0
+                    },
+                    { visible: false, targets: [1] }
+                ],
+                dom: '<"top"<"clear">>t<"bottom" p <"clear">>',
+                pageLength: 10
+            });
+
+            $('.searchbar-input').on('keyup change', function() {
+                table.search(this.value).draw();
+            })
+        })
+    </script>
+{% endblock %}

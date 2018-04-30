@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/designs.css' %}">
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+{% endblock %}
+
+{% block title %}{{plan.name}} Designs{% endblock %}
+{% block content %}
+<div class="campaign-info">
+    <h5>{{plan.name}}</h5>
+    <p>{{plan.startDate}} - {{plan.endDate}}</p>
+    <p>{{plan.client}} {% if plan.client.parent %} - {{plan.client.parent}}{% endif %}</p>
+</div>
+<div class="cards-wrapper designs">
+    {% for design in plan.designs.all %}
+        {% for ad in design.weekly_ads.all %}
+            <div class="card">
+                <div class="image-wrapper">
+                    <img src="{{design.thumbnail}}" />
+                    <a href="#" data-ad="{{ad.pk}}" class="upload"><i class="fas fa-upload"></i></a>
+                </div>
+                <div class="ad-info">
+                    <h5>{{ad.rate.publication}} {{ad.rate}}</h5>
+                    <p>{{plan.designer}}</p>
+                    <p>Size: {{ad.rate.dimensions}} Bleed: {{ad.rate.bleed}}</p>
+                    <p>{{ad.deadline}}</p>
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+</div>
+{% endblock %}
+{% block javascript %}
+    <script src="http://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.upload').click(function(e){
+                e.preventDefault()
+            })
+        })
+    </script>
+{% endblock %}

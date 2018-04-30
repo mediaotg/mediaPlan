@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+{% load humanize %} 
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+<link rel="stylesheet" href="{% static 'css/selectize.css' %}">
+<link rel="stylesheet" href="{% static 'css/plans.css' %}">
+{% endblock %}
+
+{% block title %}{{plan.name}} Media Plan{% endblock %}
+
+{% block content %}
+<div class="main-content continue">
+  <div class="congrats">
+    <div class="image" style="background-image: url({% static 'img/yay.png' %})"></div>
+  </div>
+  <div class="cards">
+    <div class="card {% if plan.status == 'approve' %}active{% endif %} {% if plan.status == 'design' %}complete{% endif %}">
+      <div class="number">
+        <span>1</span>
+      </div>
+      <div class="card-header">
+        <h6>Approve by Client</h6>
+      </div>
+      <div class="card-body">
+        <p class="description">Approve the {{plan.name}} Media Plan by {{plan.client}}</p>
+        <hr>
+        <p>Contact Person: {{plan.client.contactName}}</p>
+        <p>Email Address: <a href="mailto:{{plan.client.email}}">{{plan.client.email}}</a></p>
+        <div class="button-wrapper">
+          <a href="{% url 'save_pdf' plan.pk %}" class="button dark">Download PDF</a>
+          <button class="button" id="approve">Mark Approved</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card {% if plan.status == 'design' %}active{% endif %}">
+      <div class="number">
+        <span>2</span>
+      </div>
+      <div class="card-header">
+        <h6>Upload Designs</h6>
+      </div>
+      <div class="card-body">
+        <p class="description">Notify {{plan.designer}} to upload the designs</p>
+        <hr>
+        <p>Designs: </p>
+        {% for design in plan.designs.all %}
+          <p>{{design.name}}</p>
+        {% endfor %}
+        <div class="button-wrapper">
+          <a href="{% url 'design_pdf' plan.pk %}" class="button dark">Download PDF</a>
+          <button class="button dark" id="notify-designer">Notify {{plan.designer}}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="number">
+        <span>3</span>
+      </div>
+      <div class="card-header">
+        <h6>Book Ads</h6>
+      </div>
+      <div class="card-body">
+        <p class="description">Send media plan to be approved by publications</p>
+        <hr>
+        <div class="button-wrapper">
+          <select>
+            {% for pub in pubs %}
+              <option>{{pub.name}}</option>
+            {% endfor %}
+          </select>
+          <button class="button dark">Download PDF</a>
+          <button class="button dark">Email</button>
+          <button class="button">Mark Booked</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="number">
+        <span>4</span>
+      </div>
+      <div class="card-header">
+        <h6>Tear Sheets</h6>
+      </div>
+      <div class="card-body">
+        <p class="description">Attach tear sheets for all ads that have run.</p>
+        <hr>
+        <select>
+          {% for pub in pubs %}
+            <option>{{pub.name}}</option>
+          {% endfor %}
+        </select>
+        <div class="button-wrapper">
+          <button class="button dark">Upload Image</a>
+          <button class="button dark">Email {{plan.client}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script src="{% static 'js/selectize.min.js' %}"></script>
+    <script>
+      $(document).ready(function(){
+        console.log('{{plan.status}}')
+        $('select').selectize({
+          maxItems: 1
+        });
+
+        function getToken() {
+          function getCookie(name) {
+              var cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  var cookies = document.cookie.split(';');
+                  for (var i = 0; i < cookies.length; i++) {
+                      var cookie = jQuery.trim(cookies[i]);
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+          var csrftoken = getCookie('csrftoken');
+          function csrfSafeMethod(method) {
+              return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+          }
+          return csrftoken;
+        }
+
+        function updateStatus(status){
+          var data = new FormData();
+          data.append('status', status);
+          $.ajax({
+            url: "{% url 'update_status' plan.pk %}",
+            data: data,
+            headers: {"X-CSRFToken": getToken()},
+            contentType: false,
+            cache: false,
+            processData: false,
+            method: 'POST'
+          }).done(function(data){
+            if(data.code == "200") {
+              console.log(data.plan)
+            }
+          })
+        }
+
+        $('#approve').click(function(e){
+          e.preventDefault();
+          updateStatus('design')
+        })
+
+        $('#notify-designer').click(function(e){
+          $.ajax({
+            url: 'https://hooks.slack.com/services/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',
+            data: '{"text": "<http://127.0.0.1:8000/plans/media-plans/{{plan.pk}}/design-pdf|Ignore this> @{{plan.designer}} Uplaod designs for {{plan.name}} "}',
+            method: 'POST'
+          }).done(function(data){
+              console.log(data)
+          })
+
+        })
+
+      })
+    </script>
+{% endblock %}

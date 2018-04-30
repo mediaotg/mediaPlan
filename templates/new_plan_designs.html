@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/daterangepicker.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/awesomplete.css' %}">
+<link rel="stylesheet" href="{% static 'css/selectize.css' %}">
+<link rel="stylesheet" href="{% static 'css/dragula.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/plans.css' %}">
+{% endblock %}
+
+{% block title %}{{plan.name|truncatechars:40}} Designs{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+  <a href="/plans/media-plans/{{plan.pk}}/edit" class="step complete">Campaign Info<span></span></a>
+  <a href="/plans/media-plans/{{plan.pk}}/designs" class="step active">Designs<span></span></a>
+  <a href="/plans/media-plans/{{plan.pk}}/plan" class="step">Media Plan<span></span></a>
+</div>
+<div class="main-content">
+  <div class="form edit-form new-plan">
+    <form method="post" class="form" novalidate>
+      {% csrf_token %}
+
+      <div class="form-input input-field checkbox-input">
+        <label class="checkbox-container">Shuffle Ads
+          <input type="checkbox" checked="checked" name="shuffle">
+          <span class="checkmark"></span>
+        </label>
+      </div>
+
+      <div class="designs-wrapper dropzone-previews" id="draggable-previews">
+
+        <div id="tpl">
+          <div class="dz-preview dz-file-preview design-item">
+            <a href="#" class="delete-design">X</a>
+            <div class="dz-details">
+              <img data-dz-thumbnail class="dz-thumbnail" />
+            </div>
+            <div class="dz-progress">
+              <div class="loader"></div>
+            </div>
+            <div class="dz-success-mark"><span>✔</span></div>
+            <div class="dz-error-mark"><span>✘</span></div>
+            <div class="form-input">
+              <input type="hidden" name="pk">
+              <input type="hidden" name="image">
+              <input type="text" placeholder="File Name" name="filename">
+            </div>
+          </div>
+        </div>
+
+        <div class="add-new designless design-item">
+          <p>+</p>
+        </div>
+      </div>
+      <div class="form-input dropzone-container" id="dropzone-container">
+        <p>Drag and drop designs to upload.</p>
+      </div>
+    </form>
+  </div>
+  <div class="sidebar">
+    <div class="details card">
+      <h3>{{plan.name}}</h3>
+      <p class="client">{{plan.client}}</p>
+      <p class="date">{{plan.created_at|date:"F j, Y"}}</p>
+      <p class="starter">John Doe</p>
+    </div>
+    <button class="button" id="continue">Continue</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.2.0/min/dropzone.min.js"></script>
+    <script src="{% static 'js/dragula.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+          var images = [];
+          var deleted = [];
+          var deletedImages = [];
+
+          // Add existing designs
+          var display = [];
+          {% for design in  plan.designs.all %}
+            {% if design.thumbnail %}
+              var html = $('<div class="design-item dz-preview dz-file-preview dz-processing dz-complete dz-success"><a href="#" class="delete-design">X</a><div class="dz-details"><div class="dz-thumbnail manual" style="background-image: url(\'{{design.thumbnail}}\');"></div></div><div class="dz-progress"><div class="loader"></div></div><div class="dz-success-mark"><span>✔</span></div><div class="dz-error-mark"><span>✘</span></div><input type="file" class="file-input"><div class="form-input"><input type="hidden" name="pk" value="{{design.pk}}"><input type="hidden" name="image" value={{design.thumbnail.pk}}><input type="text" placeholder="File Name" name="filename" value="{{design.name}}" /></div>');
+              display[{{design.order}}] = html;
+            {% else %}
+              var html = $('<div class="design-item designless empty"><a href="#" class="delete-design">X</a><input type="file" class="file-input"><div class="empty-placeholder"><i class="fas fa-upload"></i></div><div class="form-input"><input type="hidden" name="pk" value="{{design.pk}}"><input type="hidden" name="image"><input type="text" placeholder="File Name" name="filename" value="{{design.name}}"/></div>');
+              display[{{design.order}}] = html;
+            {% endif %}
+          {% endfor %}
+
+          $.each(display, function(index, value){
+            $('.designs-wrapper').append(value);
+            var add = $('.add-new');
+            $('.add-new').remove();
+            $('.designs-wrapper').append(add);
+          })
+
+          function getCookie(name) {
+              var cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  var cookies = document.cookie.split(';');
+                  for (var i = 0; i < cookies.length; i++) {
+                      var cookie = jQuery.trim(cookies[i]);
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+          var csrftoken = getCookie('csrftoken');
+          function csrfSafeMethod(method) {
+              return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+          }
+
+          // Dropzone 
+          var mydropzone = new Dropzone('#dropzone-container', { 
+            url: "{% url 'upload_thumbnail' %}", 
+            paramName: 'file',
+            headers: {"X-CSRFToken": csrftoken},
+            previewTemplate: document.querySelector('#tpl').innerHTML,
+            previewsContainer: '.designs-wrapper',
+            clickable: true,
+          });
+          var addHtml = $('.designs-wrapper .add-new');
+
+          mydropzone.on("addedfile", function(file){
+            $('.add-new').remove();
+            $('.designs-wrapper').append(addHtml);
+          });
+
+          mydropzone.on("success", function(file, response){
+            images.push(response.image);
+            $(file.previewElement).find('input[name="image"]').val(response.image);
+          })
+
+          // Add empty
+          $('.designs-wrapper').on('click', '.add-new', function(e){
+            e.preventDefault();
+
+            var emptyHtml = $('<div class="design-item designless empty"><a href="#" class="delete-design">X</a><input type="file" class="file-input"><div class="empty-placeholder"><i class="fas fa-upload"></i></div><div class="form-input"><input type="hidden" name="pk"><input type="hidden" name="image"><input type="text" placeholder="File Name" name="filename" /></div>');
+            $('.designs-wrapper').append(emptyHtml);
+
+            $('.add-new').remove();
+            $('.designs-wrapper').append(addHtml);
+          });
+
+          $('.designs-wrapper').on('click', '.empty-placeholder', function(e){
+            e.preventDefault();
+            $(this).siblings('.file-input').click();       
+          });
+
+          function uploadFiles(el, file){
+            var data = new FormData();
+            data.append('file', file, file.name);
+            $.ajax({
+              url: "{% url 'upload_thumbnail' %}", 
+              headers: {"X-CSRFToken": csrftoken},
+              data: data,
+              contentType: false,
+              cache: false,
+              processData:false, 
+              method: 'POST'
+            }).done(function(data) {
+              el.addClass('dz-complete dz-success');
+              images.push(data.image);
+              $(el).find('input[name="image"]').val(data.image);
+            });
+          }
+
+          $('.designs-wrapper').on("change", ".design-item.empty .file-input", (function(e){
+            if(this.files && this.files[0]) {
+              var reader = new FileReader();
+              var input = this;
+              var parent = $(this).parent('.design-item');
+              reader.onload = function(e) {
+                $(input).parent('.design-item').removeClass('empty designless');
+                $(input).parent('.design-item').addClass('dz-preview dz-file-preview dz-processing');
+                $(input).siblings('.empty-placeholder').remove();
+                $(input).parent('.design-item').prepend($('<div class="dz-details"><div class="dz-thumbnail manual" ></div></div>\
+                    <div class="dz-progress"><div class="loader"></div></div>\
+                    <div class="dz-success-mark"><span>✔</span></div>\
+                    <div class="dz-error-mark"><span>✘</span></div>'));
+                $(input).parent('.design-item').find('.dz-thumbnail').css("background-image", "url(" + e.target.result + ")");
+              }
+              reader.readAsDataURL(this.files[0]);
+              uploadFiles(parent, this.files[0]);
+            } 
+          }));
+
+          // Delete Design
+          $('.designs-wrapper').on("click", ".design-item .delete-design", (function(e){
+            var pk = $(this).closest('.design-item').find('input[name="pk"]').val();
+            if(pk){
+              deleted.push(pk)
+            }
+            var image = $(this).closest('.design-item').find('input[name="image"]').val();
+            if(image){
+              deletedImages.push(image);
+            }
+            $(this).closest('.design-item').remove();
+          }))
+
+          // Drag and drop 
+          var containers = [document.querySelector('#draggable-previews')];
+          var dragger = dragula(containers, {
+            invalid: function(el, handle) {
+              return $(el).hasClass('add-new');
+            },
+            accepts: function(el, target, source, sibling){
+              if(sibling == null){
+                return false;
+              }
+              return true;
+            }
+          });
+
+          // Continue
+          $('#continue').click(function(e){
+            e.preventDefault();
+            $('.form-input').removeClass('invalid');
+
+            // Error
+            var valid = true;
+            $('.design-item').each(function(index){
+              if(!$(this).hasClass('add-new') && !$(this).is('#tpl .design-item')){
+                if( !$(this).find('input[name="filename"]').val()  ){
+                  $(this).find('.form-input').addClass('invalid');
+                  valid = false;
+                }
+              }
+            });
+
+            if(valid){
+              var data = new FormData();
+              $('.design-item').each(function(index){
+                if(!$(this).hasClass('add-new') && !$(this).is('#tpl .design-item')){
+                  var item = {};
+                  item.pk = $(this).find('input[name="pk"]').val();
+                  item.filename = $(this).find('input[name="filename"]').val();
+                  item.image = $(this).find('input[name="image"]').val();
+                  item.order = index;
+                  data.append('designs[]', JSON.stringify(item));
+                }
+              });
+
+              data.append('shuffle', $('input[name="shuffle"]').is(':checked'));
+              data.append('deleted', JSON.stringify(deleted));
+              data.append('deletedImages', JSON.stringify(deletedImages));
+
+              // Save
+              $.ajax({
+                url: window.location.pathname,
+                data: data,
+                headers: {"X-CSRFToken": csrftoken},
+                contentType: false,
+                cache: false,
+                processData: false, 
+                method: 'POST'
+              }).done(function(data) { 
+                if(data.code == "200") {
+                    window.location.href = "/plans/media-plans/" + data.plan + "/plan"
+                  } 
+              });
+            }            
+
+          })
+
+        });
+    </script>
+{% endblock %}

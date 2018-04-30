@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/awesomplete.css' %}">
+<link rel="stylesheet" href="{% static 'css/selectize.css' %}">
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+<link rel="stylesheet" href="{% static 'css/clients.css' %}">
+{% endblock %}
+
+{% block title %}{{ client.name }}{% endblock %}
+
+{% block content %}
+<div class="form edit-form new-client">
+  <form method="post" class="form" novalidate>
+    {% csrf_token %}
+
+    <input type="hidden" id="logo-hidden-input" name="logo" value="{{ client.logo.pk }}">
+
+    <div class="form-input input-field image-input">
+        {{ form.logo.label_tag }}
+        <div class="logo-wrapper">
+            <label for="logo-input" class="image-input-label"><span>+</span></label>
+                <input type="file" id="logo-input" name="logo-file" />
+        </div>
+        {% for error in form.logo.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div> 
+        {% endfor %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.name.label_tag }}
+        {% render_field form.name %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.contactName.label_tag }}
+        {% render_field form.contactName %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.email.label_tag }}
+        {% render_field form.email %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.phone.label_tag }}
+        {% render_field form.phone %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.parent.label_tag }}
+        <input class="awesomplete" list="parentList" />
+        <datalist id="parentList">
+          {% for item in clients %}
+            <option>{{item}}</option>
+          {% endfor %}
+        </datalist>
+    </div>
+
+    <div class="pricing">
+      <h6>Custom Pricing</h6>
+
+      <div class="publication-pricing">
+        <div class="form-input input-field">
+          <label>Publication</label><a href="#" class="delete-publication">&mdash;</a>
+          <input class="awesomplete publication-input" >
+        </div>
+        <div class="form-input input-field">
+            <label>Rates</label>
+            <div class="rates-table-wrapper">
+                <div class="rates-table">
+                  <div class="rate-line">
+                    <a href="#" class="delete-rate-line">–</a>
+                    <div class="hidden"><input type="hidden" name="ratePk" ></div>
+                    <div class="form-input input-field"><input class="awesomplete" placeholder="Page Name" name="pageName" /></div>
+                    <div class="form-input input-field"><input class="awesomplete" placeholder="Dimensions" name="dimensions" /></div>
+                    <div class="form-input input-field"><input class="awesomplete" placeholder="Bleed" name="bleed" /></div>
+                    <div class="form-input input-field total-input"><label class="inner-label">$</label><input type="text" class="number" name="price" /></div>
+                  </div>
+                </div>
+                <a href="#" class="add-rate">+</a>
+            </div>
+        </div>
+      </div>
+      <a href="#" id="add-publication">Add Publication</a>
+
+    </div>
+    <a href="#" id="add-pricing">Add Custom Pricing</a>
+
+
+    <div class="buttons-wrapper">
+      <button class="button" id="save-client" type="submit">Save Client</button>
+      <a href="#delete-popup" class="button button-danger" id="delete-client">Delete Client</a>
+    </div>
+
+    <div id="delete-popup" class="white-popup mfp-hide">
+      <h2>Delete</h2>
+      <p>Are you sure you want to permanently delete '{{ client.name }}'?</p>
+      <div class="buttons-wrapper">
+        <button class="button" id="cancel-delete">Cancel</button>
+        <a href="{% url 'delete_client' pk=client.pk %}" class="button button-danger" id="delete-confirm">Delete</a>
+      </div>
+    </div>
+  </form>
+
+</div>
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/awesomplete.min.js' %}"></script>
+    <script src="{% static 'js/selectize.min.js' %}"></script>
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            var logo = $('#logo-hidden-input');
+            
+            /* Phone */
+            function phoneMask() { 
+              var num = $(this).val().replace(/\D/g,''); 
+              $(this).val(num.substring(0,1) + '(' + num.substring(1,4) + ')' + num.substring(4,7) + '-' + num.substring(7,11)); 
+            }
+            $('[name="phone"]').keyup(phoneMask);
+
+            /* Logo */
+            if(logo.val().length > 1){
+              var parent = $('#logo-input').closest('.logo-wrapper');
+              parent.addClass('loading');
+              parent.find('.image-input-label').html('<div class="thumbnail"></div><div class="loader"></div>');
+              parent.find('.image-input-label .thumbnail').css("background-image", "url(../../../uploads/{{ client.logo.image }})");
+              parent.addClass('dz-complete dz-success');                   
+            }
+            function uploadFiles(el, file){
+                var form = $('.new-client form')[0];
+                var formData = new FormData(form);
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'upload_image' %}",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                }).done(function(data) {
+                    if(data.code == "200") {
+                        logo.val(data.image);
+                        el.addClass('dz-complete dz-success');                            
+                    }
+                });
+            }
+            $('#logo-input').change(function(e){
+              if(this.files && this.files[0]) {
+                var reader = new FileReader();
+                var input = this;
+                var parent = $(this).closest('.logo-wrapper');
+                reader.onload = function(e) {
+                  parent.addClass('loading');
+                  parent.find('.image-input-label').html('<div class="thumbnail"></div><div class="loader"></div>');
+                  parent.find('.image-input-label .thumbnail').css("background-image", "url(" + e.target.result + ")");
+                }
+                reader.readAsDataURL(this.files[0]);
+              } 
+              var logoFile = $(this)[0].files;
+              uploadFiles(parent, logoFile);
+            });
+
+            var select = $(".selectize").selectize({
+                create: true,
+                sortField: 'text'
+            });
+
+
+            /* Pricing */
+            var deleteRates = [];
+            var pubHtml = $('<div class="publication-pricing">' + $('.pricing .publication-pricing').html() + '</div>');
+            var rateLine = $('<div class="rate-line">' + $('.rate-line').html() + '</div>');
+            var publications = [];
+            {% for publication in publications %}
+                publications.push({value: '{{ publication.name }}', label: '{{ publication.name }}', pk: '{{ publication.pk }}'})
+            {% endfor %}
+
+            function awesome(){
+              $('.pricing').find('.publication-input').each(function(i, item){
+                var awe = new Awesomplete(item, {list: publications,
+                filter: function(text, input) {
+                  var returnVal = Awesomplete.FILTER_CONTAINS(text, input.match(/[^,]*$/)[0]);;
+                    $('.pricing').find('.publication-input').each(function(i, item){
+                      if(text.value == $(item).val()){
+                        returnVal = false;
+                      }
+                    })
+                    return returnVal;
+                  }
+                });
+              });
+            }
+            awesome();
+
+            $('#add-pricing').click(function(e){
+              e.preventDefault();
+              $('.pricing').show();
+              $(this).hide();
+            });
+
+            $('#add-publication').click(function(e){
+              e.preventDefault();
+              $(this).before(pubHtml.clone())
+              awesome();
+            });
+
+            $('.pricing').on("click", ".delete-publication", function(e){
+              e.preventDefault();
+              if($('.pricing').find('.publication-pricing').length < 2){
+                $('#add-pricing').show();
+                $('.pricing').hide();
+                $(this).closest('.publication-pricing').after(pubHtml.clone());                
+                $(this).closest('.publication-pricing').remove();                
+                awesome();
+              } else {
+                $(this).closest('.publication-pricing').remove();                
+              }
+            });
+
+            $('.pricing').on("click", ".add-rate", function(e){
+              e.preventDefault();
+              var el = $(this).siblings('.rates-table');
+              el.append(rateLine.clone());
+            });
+
+            $('.pricing').on('click', '.delete-rate-line', function(e){
+              e.preventDefault();
+              var rateLine = $(this).closest('.rate-line');
+              if(rateLine.has('input[name="pk"]')){
+                deleteRates.push(rateLine.find('input[name="ratePk"]').val())
+              }
+              $(this).closest('.rate-line').remove();
+            });
+
+
+            {% if client.rates.all %}
+              $('.pricing').children('.publication-pricing').remove();
+              var rates = {};
+              {% for rate in  client.rates.all %}
+                if(!('{{rate.publication}}' in rates)){
+                  rates['{{rate.publication}}'] = []
+                } 
+                rates['{{rate.publication}}'].push({pk: '{{rate.pk}}', name: '{{rate.rateName}}', size: '{{rate.dimensions}}', bleed: '{{rate.bleed}}', price: '{{rate.price}}'});
+              {% endfor %}
+              for(key in rates){
+                if(!rates.hasOwnProperty(key)) continue;
+
+                var publicationHtml = pubHtml.clone();
+                $(publicationHtml).find('.publication-input').val(key);
+                $(publicationHtml).find('.rate-line').remove();
+
+                var obj = rates[key];
+                for(var prop in obj) {
+                  if(!obj.hasOwnProperty(prop)) continue;
+                  var rateLineHtml = rateLine.clone();
+                  $(rateLineHtml).find('input[name="ratePk"]').val(obj[prop].pk);
+                  $(rateLineHtml).find('input[name="pageName"]').val(obj[prop].name);
+                  $(rateLineHtml).find('input[name="dimensions"]').val(obj[prop].size);
+                  $(rateLineHtml).find('input[name="bleed"]').val(obj[prop].bleed);
+                  $(rateLineHtml).find('input[name="price"]').val(obj[prop].price);
+                  $(publicationHtml).find('.rates-table').append(rateLineHtml);
+                }
+
+                $('.pricing').find('#add-publication').before(publicationHtml);
+
+              }
+              $('.pricing').show();
+              $('#add-pricing').hide();
+
+              awesome()
+            {% endif %}
+
+            /* Submit Form */
+            $('form').submit(function(e){
+                e.preventDefault();
+                console.log('submitted');
+
+                var data = new FormData(e.target);
+                var pricingArray = [];
+                var pubPricings = $('.pricing').find('.publication-pricing');
+                $.each(pubPricings, function(index, value){
+                  var pub = $(value).find('.publication-input').val();
+                  console.log(pub.length)
+                  if(pub.length > 0){
+                    var pubPricing = {publication: pub, rates: []}
+
+                    var rates = [];
+                    var rateLines = $(value).find('.rate-line');
+                    var existingRate = false;
+                    $.each(rateLines, function(index, rateLine){
+                      if($(rateLine).find('input[name="pageName"]').val().length > 0 && $(rateLine).find('input[name="price"]').val().length > 0){
+                        var rate = {};
+                        rate['pk'] = '';
+                        rate['pk'] = $(rateLine).find('input[name="ratePk"]').val();
+                        rate['name'] = $(rateLine).find('input[name="pageName"]').val();
+                        rate['size'] = $(rateLine).find('input[name="dimensions"]').val();
+                        rate['bleed'] = $(rateLine).find('input[name="bleed"]').val();
+                        rate['price'] = $(rateLine).find('input[name="price"]').val();
+                        pubPricing['rates'].push(rate);  
+                        existingRate = true;            
+                      } 
+                    });
+
+                    if(existingRate){
+                      data.append('rates', JSON.stringify(pubPricing));                      
+                    }
+                  }
+                });
+                data.append('deleteRates', JSON.stringify(deleteRates));
+
+                $.ajax({
+                    type: 'POST',
+                    url: window.location.pathname,
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                }).done(function(data) {
+                  console.log(data);
+                    if(data.code == "200") {
+                        window.location.href = "/setup/clients/" + data.client;
+                    } else if(data.code == "300"){
+                      $('.invalid-feedback').remove();
+                      $('.form-input').removeClass('invalid');
+                      $.each(data.errors, function(key, value){
+                        var el = $('#id_' + key);
+                        el.closest('.form-input').addClass('invalid');
+                        el.closest('.form-input').append('<div class="invalid-feedback">' + value + '</div>');       
+                      })
+                    }
+                });
+
+            });
+
+            // Delete 
+            $('#delete-client').magnificPopup({
+              type: 'inline',
+              midClick: true
+            });
+
+            $('#cancel-delete').click(function(e){
+              e.preventDefault();
+              $.magnificPopup.close(); 
+            });
+          
+        })
+    </script>
+{% endblock %}

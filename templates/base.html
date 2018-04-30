@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Media Planner Prototype</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" type="text/css" > 
+    {% block stylesheets %}{% endblock %}
+  </head>
+  <body class="flex-wrapper">
+    <header>
+      <div class="pull-left">
+        <a href="#" class="nav-opener"></a>
+        <h1 class="logo">Planit</h1>
+      </div>
+
+      <div class="pull-right">
+        <div class="avatar">
+          <div class="avatar--icon">
+            <div class="avatar--circle">
+
+            </div>
+            <div class="avatar--notification_count">
+              <span>3</span>
+            </div>
+          </div>
+          <div class="avatar--dropdown">
+
+          </div>
+        </div>
+      </div>
+
+    </header>
+    <nav>
+      <a href="dashboard.html" class="nav-item">
+        <div class="font-awesome">
+          <i class="fas fa-chart-pie"></i>
+        </div> 
+        <p>Dashboard</p>
+      </a>
+      <a href="{% url 'media_plans' %}" class="nav-item {% if 'media-plans' in request.get_full_path %}active{% endif %}">
+        <div class="font-awesome">
+          <i class="fas fa-list-ul"></i>
+        </div> 
+        <p>Media Plans</p>
+      </a>
+      <a href="{% url 'designs' %}" class="nav-item {% if 'designs' in request.get_full_path %}active{% endif %}">
+        <div class="font-awesome">
+          <i class="fas fa-file-image"></i>
+        </div> 
+        <p>Designs</p>
+      </a>
+      <a href="calendar.html" class="nav-item">
+        <div class="font-awesome">
+          <i class="fas fa-calendar-alt"></i>
+        </div> 
+        <p>Calendar</p>
+      </a>
+      <a href="{% url 'clients' %}" class="nav-item {% if 'clients' in request.get_full_path %}active{% endif %}">
+        <div class="font-awesome">
+          <i class="fas fa-address-book"></i>
+        </div> 
+        <p>Clients</p>
+      </a>
+      <a href="{% url 'publications' %}" class="nav-item {% if 'publication' in request.get_full_path %}active{% endif %}">
+        <div class="font-awesome">
+          <i class="fas fa-book"></i>
+        </div> 
+        <p>Publications</p>
+      </a>
+      <a href="{% url 'target_groups' %}" class="nav-item {% if 'target-group' in request.get_full_path %}active{% endif %}">
+        <div class="font-awesome">
+          <i class="fas fa-bullseye"></i>
+        </div> 
+        <p>Target Groups</p>
+      </a>
+      <a href="reports.html" class="nav-item">
+        <div class="font-awesome">
+          <i class="fas fa-chart-area"></i>
+        </div> 
+        <p>Reports</p>
+      </a>
+      <a href="users.html" class="nav-item">
+        <div class="font-awesome">
+          <i class="fas fa-users"></i>
+        </div> 
+        <p>Users</p>
+      </a>
+    </nav>
+
+    <div class="content-wrapper">
+      <h2>{% block title %}Media Plans{% endblock %}</h2>
+      {% block content %}
+      {% endblock %}
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.0.4/js/all.js"></script>
+    {% block javascript %}{% endblock %}
+  </body>
+</html>

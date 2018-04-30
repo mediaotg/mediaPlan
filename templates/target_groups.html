@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/target-groups.css' %}">
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+{% endblock %}
+{% block title %}Target Groups{% endblock %}
+
+{% block content %}
+
+<div class="top-wrapper">
+    <div class="searchbar">
+      <input type="text" class="searchbar-input" placeholder="Search" />
+      <a href="#" class="search-button"><i class="fas fa-search"></i></a>
+    </div> 
+    <div class="buttons-wrapper">
+      <a href="#import-popup" class="button" id="import">Import</a>
+      <a href="{% url 'new_target_group' %}" class="button" id="new-group">New Target Group</a>
+    </div>
+</div>
+
+<div class="table striped-table main-table">
+  <table id="groups-table">
+    <tbody>
+    </tbody>
+  </table>
+
+  <div id="import-popup" class="white-popup mfp-hide">
+    <h2>Import Target Groups</h2>
+    <p>Select a file and upload to import target groups.</p>
+    <form method="post" enctype="multipart/form-data" action="{% url 'upload_groups' %}" id="import-form" class="form">
+        {% csrf_token %}
+        <input type="file" name="myfile" id="fileselect">
+        <button class="button light" id="fileselect-button">Choose File</button>
+        <button class="button" type="submit" id="import-button" disabled="disabled">Upload</button>
+    </form>
+    <p id="import-form-error">There was an error uploading the file. Check that there are no duplicates in the file.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+    <script src="http://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            $("#import-form-error").hide();
+
+            var data = [];
+            {% for group in groups %}
+                data.push([{{ group.pk }}, '{{ group.name }}']);
+            {% endfor %}
+            console.log(data);
+
+            var table = $('#groups-table').DataTable({
+                data: data,
+                columnDefs: [
+                    {
+                        render: function(data, type, row) {
+                            return '<a href="target-groups/' + data + '">' + row[1] + '</a>';
+                        },
+                        targets: 0
+                    },
+                    { visible: false, targets: [1] }
+                ],
+                dom: '<"top"<"clear">>t<"bottom" p <"clear">>',
+                pageLength: 10
+            });
+
+            $('.searchbar-input').on('keyup change', function() {
+                table.search(this.value).draw();
+            });
+
+
+            // import 
+            $('#import').magnificPopup({
+              type: 'inline',
+              midClick: true
+            });
+            $('#fileselect-button').click(function(e){
+                e.preventDefault();
+                $('#fileselect').click();
+                $("#import-form-error").hide();
+                $('#import-form').removeClass('error');
+            });
+            $('#fileselect').change(function(e){
+                var filename = $(this).val().split('\\').pop();
+                $('#fileselect-button').text(filename);
+                $('#import-button').removeAttr('disabled');
+                $("#import-form-error").hide();
+                $('#import-form').removeClass('error');
+            });
+            $('#import-form').submit(function(e){
+                e.preventDefault();
+                var form = $(this);
+                $('#import-form-error').hide();
+                form.removeClass('error');
+                $.ajax({
+                    method: 'POST',
+                    url: $('#import-form').attr('action'),
+                    data: new FormData($('#import-form')[0]),
+                    contentType: false,
+                    cache: false, 
+                    processData: false,
+                }).done(function(data){
+                    if(data.code == '500'){
+                        $('#import-form-error').show();
+                        form.addClass('error');
+                    } else {
+                        window.location.href="target-groups"
+                    }
+                });
+            });
+        })
+    </script>
+{% endblock %}

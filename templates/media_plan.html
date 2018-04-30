@@ -1,0 +1,1371 @@
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+{% load humanize %} 
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/daterangepicker.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/awesomplete.css' %}">
+<link rel="stylesheet" href="{% static 'css/selectize.css' %}">
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+<link rel="stylesheet" href="{% static 'css/plans.css' %}">
+{% endblock %}
+
+{% block title %}{{plan.name}} Media Plan{% endblock %}
+
+{% block content %}
+<div class="breadcrumbs">
+  <a href="/plans/media-plans/{{plan.pk}}/edit" class="step complete">Campaign Info<span></span></a>
+  <a href="/plans/media-plans/{{plan.pk}}/designs" class="step complete">Designs<span></span></a>
+  <a href="#" class="step active">Media Plan<span></span></a>
+</div>
+<div class="main-content">
+  <div class="form edit-form plan-weeks">
+    <form method="post" class="form" novalidate>
+      {% csrf_token %}
+      {% for week in budget %}
+        <div class="week week-{{week.week.pk}}">
+          <div class="week-header">
+            <h3 class="week-header-date">{{week.week.start|date:"F d"}} - {{week.week.end|date:"F d"}}</h3>
+            <h3 class="week-header-total"></h3>
+            <h3 class="week-header-button">-</h3>
+          </div>
+
+          <!-- Weekly -->
+          <div class="media-type weeklys" data-week="{{week.week.pk}}" data-type="weekly">
+            <h5>Weekly</h5><a href="#weekly-popup-{{week.week.pk}}-weekly" class="select-weekly select-pub-link">Select Publications</a>
+            <div class="publications-list">
+              {% for pub in week.pubsweekly %}
+                <div class="publication-single closed pub-{{pub.pub.pk}}" data-publication="{{pub.pub.pk}}">
+                  <div class="publication-header">
+                    <div class="publication-logo">
+                      <img src="{{pub.pub.logo}}" alt="{{pub.pub.name}}">
+                    </div>
+                    <h4 class="publication-name">{{pub.pub.name}}</h4>
+                    <h4 class="publication-total">${{pub.total|floatformat:2}}</h4>
+                  </div>
+                  <div class="publication-body">
+                    <div class="ads-list">
+                      {% for ad in pub.rates %}
+                        <div class="ad-single" data-rate='{{ad.rate.pk}}' data-ad='{{ad.pk}}'>
+                            <a href="#" class="delete-ad">x</a>
+                            <div class="ad-logo">
+                              <div class="wrapper-dropdown image">
+                                <span class="dropdown-selected"><div class="image-wrapper" style="background-image: url({{ad.design.thumbnail}})" data-design="{{ad.design.pk}}"></div><span>{{ad.design|truncatechars:7}}</span></span>
+                                  <ul class="dropdown" tabindex="1">
+                                    {% for design in plan.designs.all %}
+                                      <li><a href="#"><div data-design="{{design.pk}}" class="image-wrapper" style="background-image: url({{design.thumbnail}})"></div> <span>{{design.name}}</span></a></li>
+                                    {% endfor %}
+                                  </ul>
+                              </div>
+                             </div>
+
+                              <div class="wrapper-dropdown page">
+                                <span>{{ad.rate.rateName}}</span>
+                                  <ul class="dropdown" tabindex="1">
+                                    {% for rate in pub.pub.rates.all %}
+                                      {% if rate.client == plan.client or rate.client == None %}
+                                        <li><a href="#" data-price='{{rate.price}}' data-pk='{{rate.pk}}'>{{rate.rateName}}</a></li>
+                                      {% endif %}
+                                    {% endfor %}
+                                  </ul>
+                              </div>
+
+                             <div class="form-input input-field date-input">
+                                <input type="text" class="date-picker" value="{{ad.deadline | date:'Y-m-d'}}" />
+                            </div>
+                            <p class="ads-total">${{ad.rate.price|floatformat:2}}</p>
+                        </div>
+                      {% endfor %}
+
+                      <a href="#" class="add-ads add-link">Add ad placement</a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+            <!-- Ad template -->
+            <div class="ad-single template" data-rate='' id="ad-template-weekly">
+              <a href="#" class="delete-ad">x</a>
+                <div class="ad-logo">
+                  <div class="wrapper-dropdown image">
+                    <span class="dropdown-selected"><div class="image-wrapper"></div><span></span></span>
+                      <ul class="dropdown" tabindex="1">
+                        {% for design in plan.designs.all %}
+                          <li><a href="#"><div class="image-wrapper" style="background-image: url({{design.thumbnail}})" data-design="{{design.pk}}"></div> <span>{{design.name}}</span></a></li>
+                        {% endfor %}
+                      </ul>
+                  </div>
+                 </div>
+
+                  <div class="wrapper-dropdown page">
+                    <span class="name"></span>
+                      <ul class="dropdown" tabindex="1">
+                            <li><a href="#" data-pk=''></a></li>
+                      </ul>
+                  </div>
+
+                 <div class="form-input input-field date-input">
+                  <input type="text" class="date-picker" value="2018-03-12" />
+                </div>
+                <p class="ads-total"></p>
+            </div>
+
+            <!-- Popups -->
+            <div class="white-popup mfp-hide select-pubs" id="weekly-popup-{{week.week.pk}}-weekly" data-type="weekly" data-week="{{week.week.pk}}">
+              <h3>Select Publications</h3>
+              {% for group in publications.weekly %}
+                <h5>{{group.group.name}}</h5>
+                {% for pub in group.publications %} 
+                  <div class="form-input input-field checkbox-input">
+                    <label class="checkbox-container">{{pub.name}}
+                      <input type="checkbox" {% for pub2 in week.week.selectedPubs.all %}{% if pub.pk == pub2.pk %}checked="checked"{% endif %}{% endfor %}>
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
+                {% endfor %}
+              {% endfor %}
+              <button class="button save-selected-pubs">Update</button>
+            </div>
+
+          </div>
+
+          <!-- Daily -->
+          <div class="media-type daily" data-week="{{week.week.pk}}" data-type="daily">
+            <h5>Daily</h5><a href="#weekly-popup-{{week.week.pk}}-daily" class="select-weekly select-pub-link">Select Publications</a>
+            <div class="publications-list">
+              {% for pub in week.pubsdaily %}
+                <div class="publication-single closed pub-{{pub.pub.pk}}" data-publication="{{pub.pub.pk}}">
+                  <div class="publication-header">
+                    <div class="publication-logo">
+                      <img src="{{pub.pub.logo}}" alt="{{pub.pub.name}}">
+                    </div>
+                    <h4 class="publication-name">{{pub.pub.name}}</h4>
+                    <h4 class="publication-total">${{pub.total|floatformat:2}}</h4>
+                  </div>
+                  <div class="publication-body">
+                    <div class="ads-list">
+                      {% for ad in pub.rates %}
+                        <div class="ad-single" data-rate='{{ad.rate.pk}}' data-ad='{{ad.pk}}'>
+                            <a href="#" class="delete-ad">x</a>
+                            <div class="ad-logo">
+                              <div class="wrapper-dropdown image">
+                                <span class="dropdown-selected"><div class="image-wrapper" style="background-image: url({{ad.design.thumbnail}})" data-design="{{ad.design.pk}}"></div><span>{{ad.design|truncatechars:7}}</span></span>
+                                  <ul class="dropdown" tabindex="1">
+                                    {% for design in plan.designs.all %}
+                                      <li><a href="#"><div class="image-wrapper" style="background-image: url({{design.thumbnail}})" data-design="{{design.pk}}"></div> <span>{{design.name}}</span></a></li>
+                                    {% endfor %}
+                                  </ul>
+                              </div>
+                             </div>
+
+                              <div class="wrapper-dropdown page">
+                                <span>{{ad.rate.rateName}}</span>
+                                  <ul class="dropdown" tabindex="1">
+                                    {% for rate in pub.pub.rates.all %}
+                                      {% if rate.client == plan.client or rate.client == None %}
+                                        <li><a href="#" data-price='{{rate.price}}' data-pk='{{rate.pk}}'>{{rate.rateName}}</a></li>
+                                      {% endif %}
+                                    {% endfor %}
+                                  </ul>
+                              </div>
+
+                             <div class="form-input input-field date-input">
+                              <div class="day-select">
+                                <button>S</button>
+                                <button class="clicked">M</button>
+                                <button>T</button>
+                                <button>W</button>
+                                <button>T</button>
+                                <button>F</button>
+                                <button>S</button>
+                              </div>
+                            </div>
+                            <p class="ads-total">${{ad.rate.price|floatformat:2}}</p>
+                        </div>
+                      {% endfor %}
+                      <a href="#" class="add-ads add-link">Add ad placement</a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+
+            <!-- Ad template -->
+            <div class="ad-single template" data-rate='' id="ad-template-daily">
+                <a href="#" class="delete-ad">x</a>
+                <div class="ad-logo">
+                  <div class="wrapper-dropdown image">
+                    <span class="dropdown-selected"><div class="image-wrapper"></div><span></span></span>
+                      <ul class="dropdown" tabindex="1">
+                        {% for design in plan.designs.all %}
+                          <li><a href="#"><div class="image-wrapper" style="background-image: url({{design.thumbnail}})" data-design="{{design.pk}}"></div> <span>{{design.name}}</span></a></li>
+                        {% endfor %}
+                      </ul>
+                  </div>
+                 </div>
+
+                  <div class="wrapper-dropdown page">
+                    <span class="name"></span>
+                      <ul class="dropdown" tabindex="1">
+                            <li><a href="#" data-pk=''></a></li>
+                      </ul>
+                  </div>
+
+                 <div class="form-input input-field date-input">
+                  <div class="day-select">
+                    <button class="clicked">S</button>
+                    <button>M</button>
+                    <button>T</button>
+                    <button>W</button>
+                    <button>T</button>
+                    <button>F</button>
+                    <button>S</button>
+                  </div>
+                </div>
+                <p class="ads-total"></p>
+            </div>
+
+            <!-- Popups -->
+            <div class="white-popup mfp-hide select-pubs" id="weekly-popup-{{week.week.pk}}-daily" data-type="daily" data-week="{{week.week.pk}}">
+              <h3>Select Publications</h3>
+              {% for group in publications.daily %}
+                <h5>{{group.group.name}}</h5>
+                {% for pub in group.publications %} 
+                  <div class="form-input input-field checkbox-input">
+                    <label class="checkbox-container">{{pub.name}}
+                      <input type="checkbox" {% for pub2 in week.week.selectedPubs.all %}{% if pub.pk == pub2.pk %}checked="checked"{% endif %}{% endfor %}>
+                      <span class="checkmark"></span>
+                    </label>
+                  </div>
+                {% endfor %}
+              {% endfor %}
+              <button class="button save-selected-pubs">Update</button>
+            </div>
+
+          </div>
+
+        </div>
+
+      {% endfor %}
+
+      <div class="week extra">
+          <div class="week-header">
+            <h3 class="week-header-date">Extra</h3>
+            <h3 class="week-header-total">${{extra.total | floatformat:2}}</h3>
+            <h3 class="week-header-button">-</h3>
+          </div>
+
+              <!-- Type -->
+              <div class="media-type full" data-type="full">
+                <h5>Full Length</h5>
+                <a href="#popup-full" class="select-full select-pub-link">Select Publications</a>
+                <div class="publications-list">
+                  {% for pub in extra.full %}
+                    <!-- Publication -->
+                    <div class="publication-single closed pub-{{pub.pub.pk}}" data-publication="{{pub.pub.pk}}">
+                      <div class="publication-header">
+                        <div class="publication-logo">
+                          <img src="{{pub.pub.logo}}" alt="{{pub.pub.name}}">
+                        </div>
+                        <h4 class="publication-name">{{pub.pub.name}}</h4>
+                        <h4 class="publication-total">${{pub.total|floatformat:2}}</h4>
+                      </div>
+
+                      <!-- Body -->
+                      <div class="publication-body">
+                        <div class="ads-list">
+                          {% for ad in pub.rates %}
+                            <div class="ad-single template" data-rate='{{ad.rate.pk}}' data-ad='{{ad.pk}}'>
+                                <a href="#" class="delete-ad">x</a>
+                                <div class="ad-logo">
+                                  <div class="wrapper-dropdown image">
+                                  <span class="dropdown-selected"><div class="image-wrapper" style="background-image: url({{ad.design.thumbnail}})" data-design="{{ad.design.pk}}"></div><span>{{ad.design|truncatechars:7}}</span></span>
+                                      <ul class="dropdown" tabindex="1">
+                                        {% for design in plan.designs.all %}
+                                          <li><a href="#"><div class="image-wrapper" style="background-image: url({{design.thumbnail}})" data-design="{{design.pk}}"></div> <span>{{design.name}}</span></a></li>
+                                        {% endfor %}
+                                      </ul>
+                                  </div>
+                                 </div>
+
+                                <div class="wrapper-dropdown page">
+                                  <span>{{ad.rate.rateName}}</span>
+                                    <ul class="dropdown" tabindex="1">
+                                      {% for rate in pub.pub.rates.all %}
+                                        {% if rate.client == plan.client or rate.client == None %}
+                                          <li><a href="#" data-price='{{rate.price}}' data-pk='{{rate.pk}}'>{{rate.rateName}}</a></li>
+                                        {% endif %}
+                                      {% endfor %}
+                                    </ul>
+                                </div>
+
+                                 <div class="form-input input-field date-input">
+                                    <input type="text" class="date-picker" value="{{ad.deadline}}" />
+                                  </div>
+                                <p class="ads-total">{{ad.rate.price|floatformat:2}}</p>
+                            </div>
+                          {% endfor %}
+                          <a href="#" class="add-ads add-link">Add ad placement</a>
+                        </div>
+
+                      </div>
+                    </div>
+                    <!-- End Publication -->
+                  {% endfor %}
+
+                  <!-- Ad template -->
+                  <div class="ad-single template" data-rate='' id="ad-template-full">
+                      <a href="#" class="delete-ad">x</a>
+                      <div class="ad-logo">
+                        <div class="wrapper-dropdown image">
+                          <span class="dropdown-selected"><div class="image-wrapper"></div><span></span></span>
+                            <ul class="dropdown" tabindex="1">
+                              {% for design in plan.designs.all %}
+                                <li><a href="#"><div class="image-wrapper" style="background-image: url({{design.thumbnail}})" data-design="{{design.pk}}"></div> <span>{{design.name}}</span></a></li>
+                              {% endfor %}
+                            </ul>
+                        </div>
+                       </div>
+
+                        <div class="wrapper-dropdown page">
+                          <span class="name"></span>
+                            <ul class="dropdown" tabindex="1">
+                                  <li><a href="#" data-pk=''></a></li>
+                            </ul>
+                        </div>
+
+                       <div class="form-input input-field date-input">
+                          <input type="text" class="date-picker" value="2018-03-12" />
+                        </div>
+                      <p class="ads-total"></p>
+                  </div>
+
+                  <!-- Popups -->
+                  <div class="white-popup mfp-hide select-pubs" id="popup-full" data-type="full">
+                    <h3>Select Publications</h3>
+                    {% for group in publications.allFull %}
+                      <h5>{{group.group.name}}</h5>
+                      {% for pub in group.publications %} 
+                        <div class="form-input input-field checkbox-input">
+                          <label class="checkbox-container">{{pub.name}}
+                            <input type="checkbox" {% for pub2 in publications.full %}{% if pub.pk == pub2.pk %}checked="checked"{% endif %}{% endfor %}>
+                            <span class="checkmark"></span>
+                          </label>
+                        </div>
+                      {% endfor %}
+                    {% endfor %}
+                    <button class="button save-selected-pubs">Update</button>
+                  </div>
+
+                </div>
+              </div>
+              <!-- End Type -->
+
+              <!-- Type -->
+              <div class="media-type extra" data-type="extra">
+                <h5>Extra</h5>
+                <div class="publications-list">
+
+                  <!-- Publication -->
+                  <div class="publication-single closed">
+                    <!-- Header -->
+                    <div class="publication-header">
+                      <h4 class="publication-name">Additional Expenses</h4>
+                      <h4 class="publication-total">${{extra.expenses.total|floatformat:2}}</h4>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="publication-body">
+                      <div class="ads-list">
+                        {% for ad in plan.expenses.all %}
+                          <div class="ad-single template" data-rate='' data-ad="{{ad.pk}}">
+                              <a href="#" class="delete-ad">x</a>
+                               <div class="form-input input-field">
+                                  <input type="text" class="name-input" value='{{ad.name}}'/>
+                                </div>
+
+                               <div class="form-input input-field date-input">
+                                  <input type="text" class="date-picker" value="{{ad.deadline}}" />
+                                </div>
+
+                               <div class="form-input input-field has-inner">
+                                  <input type="text" class="total-input" value='{{ad.total}}'/>
+                                   <label class="inner-label">$</label>
+                                </div>
+                          </div>
+                        {% endfor %}
+                        <a href="#" class="add-extra add-link">Add Extra</a>
+                      </div>
+
+                    </div>
+                  </div>
+                  <!-- End Publication -->
+
+                  <!-- Ad template -->
+                  <div class="ad-single template" data-rate='' id="ad-template-extra">
+                      <a href="#" class="delete-ad">x</a>
+                       <div class="form-input input-field">
+                          <input type="text" class="name-input" />
+                        </div>
+
+                       <div class="form-input input-field date-input">
+                          <input type="text" class="date-picker" value="2018-03-12" />
+                        </div>
+
+                       <div class="form-input input-field has-inner">
+                          <input type="text" class="total-input" />
+                           <label class="inner-label">$</label>
+                        </div>
+                  </div>
+
+                </div>
+              </div>
+              <!-- End Type -->
+      </div>
+    </form>
+
+  </div>
+  <div class="sidebar">
+    <div class="details card">
+      <h3>{{ plan.name }}</h3>
+      <p class="client">{{ plan.client }}</p>
+      <p class="date">{{plan.created_at|date:"F j, Y"}}</p>
+      <p class="starter">John Doe</p>
+    </div>
+    <div class="budget-banner"><div class="background"></div><span>$0.00</span></div>
+    <div class="totals card">
+      <table>
+        <thead>
+          <tr>
+            <td>Total</td><td class="grand-total">$0.00</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Commission</td><td class="commission">$0.00</td>
+          </tr>
+          <tr>
+            <td>Gross</td><td class="gross">$0.00</td>
+          </tr>
+          <tr>
+            <td>Budget</td><td>${{plan.budget|floatformat:2}}</td>
+          </tr>
+        </tbody>
+      </table>
+      <table>
+        {% for week in plan.weeks.all %}
+        <tr>
+          <td>Week {{ forloop.counter }}</td><td class="week-total" data-week="{{week.pk}}">$0.00</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <button class="button dark" id="save">Save as Draft</button>
+    <button class="button" id="continue">Continue</button>
+    <a href="#delete-popup" class="button button-danger" id="delete">Delete</a>
+  </div>
+
+  <div id="delete-popup" class="white-popup mfp-hide">
+    <h2>Delete</h2>
+    <p>Are you sure you want to permanently delete '{{ plan.name }} Campaign'?</p>
+    <div class="buttons-wrapper">
+      <button class="button" id="cancel-delete">Cancel</button>
+      <a href="{% url 'delete_plan' plan.pk %}" class="button button-danger" id="delete-confirm">Delete</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script src="{% static 'js/jquery.daterangepicker.js' %}"></script>
+    <script>
+      $.fn.extend({
+          toggleText: function(a, b){
+              return this.text(this.text() == b ? a : b);
+          }
+      });
+      String.prototype.trimToLength = function(m) {
+        return (this.length > m) 
+          ? jQuery.trim(this).substring(0, m-1) + "..."
+          : this;
+      };
+
+
+
+      $('document').ready(function(){
+        window.onscroll = function() {scrollFix()};
+        var sidebar = $('.sidebar')[0];
+        var sticky = sidebar.offsetTop - 200;
+        function scrollFix() {
+          if (window.pageYOffset >= sticky) {
+            sidebar.classList.add("sticky");
+          } else {
+            sidebar.classList.remove("sticky");
+          }
+        }
+
+
+        // Initialize
+        var groups = [];
+        {% for group in groups %}
+          groups.push({pk: '{{group.pk}}', name: '{{group.name}}' })
+        {% endfor %}
+
+        var publications = [];
+        {% for publication in publications.all %}
+          publication = {pk: '{{publication.pk}}', name: '{{publication.name}}', logo: '{{publication.logo}}', rates: [] }
+          {% for rate in publication.rates.all %}
+            {% if rate.client == plan.client or rate.client == None %}
+              publication.rates.push({'pk': '{{rate.pk}}', 'name': '{{rate.rateName}}', 'price': '{{rate.price}}'})
+            {% endif %}
+          {% endfor %}
+          publications.push(publication)
+        {% endfor %}
+
+        plan = {'plan': {'pk': {{plan.pk}}, 'name': '{{plan.name}}', 'budget': '{{plan.budget}}', 'dates':'{{plan.dates}}', 'shuffle': '{{plan.shuffle}}'}, 'weeks': [], 'designs': [], 'total': 0, 'full': {'publications': [], 'total': 0}, 'extra': {'total': 0, 'ads': []}};
+        {% for design in plan.designs.all %}
+          plan.designs.push({'pk': '{{design.pk}}', 'url': '{{design.thumbnail}}', 'name': '{{design.name}}'})
+        {% endfor %}
+
+        $('.media-type.full').find('.publication-single').each(function(index){
+          var pubIndex = publications.findIndex(item => item.pk == $(this).data('publication'));
+          var current = publications[pubIndex];
+          pub = {'publication': current.pk, 'ads': [], 'total': 0}
+          $(this).find('.ad-single').each(function(index2){
+            var rateIndex = current.rates.findIndex(item => item.pk == $(this).data('rate'));
+            var rate = {'pk': current.rates[rateIndex].pk, 'name': current.rates[rateIndex].name, 'price': current.rates[rateIndex].price};
+            rate.element = $(this);
+            pub.ads.push(rate);
+            pub.total += parseInt(current.rates[rateIndex].price);
+            plan.full.total += parseInt(current.rates[rateIndex].price);
+            $('.media-type.full').find('.week-header-total').text('$' + plan.full.total.toFixed(2))
+          });
+          plan.total += pub.total
+          updateGrandTotal(plan.total)
+          plan.full.publications.push(pub)
+        })
+
+        $('.media-type.extra').find('.publication-single .ad-single').each(function(index){
+          var total = $(this).find('.total-input').val()
+          plan.extra.total += parseInt(total)
+          plan.extra.ads.push({'total': total})
+          plan.full.total += parseInt(total)
+          plan.total += parseInt(total)
+          $('.media-type.full').find('.week-header-total').text('$' + plan.full.total.toFixed(2))
+        })
+
+        {% for week in plan.weeks.all %}
+          week = {'pk': '{{week.pk}}', 'start': '{{week.start}}', 'end': '{{week.end}}', 'selectedPubs': [], 'element': $('.week-{{week.pk}}'), 'total': 0 }        
+          $(week.element).find('.publication-single').each(function(index){
+            var publication = {'publication': $(this).data('publication'), 'ads': [], 'total': 0, 'element': $(this)};
+            var pubIndex = publications.findIndex(item => item.pk == $(this).data('publication'));
+            var current = publications[pubIndex];
+            $(this).find('.ad-single').each(function(index2){
+              var rateIndex = current.rates.findIndex(item => item.pk == $(this).data('rate'));
+              var rate = {'pk': current.rates[rateIndex].pk, 'name': current.rates[rateIndex].name, 'price': current.rates[rateIndex].price};
+              rate.element = $(this);
+              publication.ads.push(rate);
+              publication.total += parseInt(current.rates[rateIndex].price);
+            });
+            week.total += parseInt(publication.total);
+            week.selectedPubs.push(publication);
+            $(week.element).find('.week-header-total').text('$' + week.total.toFixed(2))
+            $('.sidebar').find('.week-total[data-week="' + week.pk + '"]').text('$' + week.total.toFixed(2))
+          });
+          plan.total += week.total
+          updateGrandTotal(plan.total)
+          plan.weeks.push(week)
+        {% endfor %}
+
+        // Close Week 
+        $('.week').on('click', '.week-header', function(e){
+          $(this).parent('.week').toggleClass('closed');
+          $(this).find('.week-header-button').toggleText('+', '-');
+        })
+
+        // Close Publication 
+        $('.week').on('click', ".publication-header", function(e){
+          $(this).parent(".publication-single").toggleClass('closed');
+        });
+
+        // Date Picker
+        $('.date-picker').each(function(index) {
+          $(this).dateRangePicker({
+            autoClose: true,
+            singleDate : true,
+            showShortcuts: false,
+            singleMonth: true,
+            showTopbar: false
+          });
+        });
+
+        // Dropdown
+        function DropDown(el) {
+          this.dd = el;
+          this.placeholder = this.dd.children('span');
+          this.opts = this.dd.find('ul.dropdown > li');
+          this.val = '';
+          this.index = -1;
+          this.initEvents();
+        }
+        DropDown.prototype = {
+          initEvents : function() {
+            var obj = this;
+
+            obj.dd.on('click', function(event){
+              if(!$(this).hasClass('active')){
+                $('.wrapper-dropdown').removeClass('active');
+              }
+              $(this).toggleClass('active');
+              $('.ad-single').css('z-index', '2');
+              $(this).closest('.ad-single').css('z-index', '998');
+              return false;
+            });
+
+            obj.opts.on('click',function(){
+              $(this).closest('.wrapper-dropdown').trigger('dd_picked', $(this));
+              var opt = $(this).clone();
+              $(opt).find('span').text(opt.find('span').text().trimToLength(5));
+              obj.val = opt.html();
+              obj.index = opt.index();
+              obj.placeholder.html(obj.val);
+            });
+          },
+          getValue : function() {
+            return this.val;
+          },
+          getIndex : function() {
+            return this.index;
+          }
+        }
+
+        $('.wrapper-dropdown').each(function(index){
+          var dd = new DropDown( $(this));
+        });
+        $(document).click(function() {
+          $('.wrapper-dropdown').removeClass('active');
+        });
+
+        // Select Publications
+        $('.select-pub-link').magnificPopup({
+          type: 'inline',
+          midClick: true
+        });
+
+        $('.select-pubs input').change(function(e){
+          var value = $(this).closest('.checkbox-container').text().trim();
+          var set = $(this).prop('checked');
+
+          // update all copies
+          $(this).closest('.select-pubs').find('input').each(function(index){
+            if($(this).closest('.checkbox-container').text().trim() == value){
+              $(this).prop('checked', set);
+            }
+          });
+
+          var type = $(this).closest('.select-pubs').data('type');
+
+          if(type == 'full'){
+            var exists = false;
+            $('.media-type.full').find('.publication-single').each(function(index){
+              if($(this).find('.publication-name').text() == value){
+                exists = true;
+              }
+            });
+
+            var item = publications.find(function(el){
+              return el.name == value;
+            })
+            var pk = item.pk
+            if (exists) {
+              // Remove
+              $('.media-type.full').find('.pub-' + item.pk +' .ad-single').each(function(index){
+                if($(this).data('ad')){
+                  deleteAds.full.push($(this).data('ad'))
+                }
+              });
+              $('.media-type.full').find('.pub-' + item.pk).remove();
+              var pubIndex = plan.full.publications.findIndex(item=>item.publication==pk)
+              plan.full.total -= plan.full.publications[pubIndex].total
+              plan.total -= plan.full.publications[pubIndex].total
+              plan.full.publications.splice(pubIndex, 1)
+              $('.media-type.full').closest('.week').find('.week-header-total').text('$' + plan.full.total.toFixed(2))
+
+              updateGrandTotal(plan.total)
+              // warn about losing data
+            } else {
+              var html = '<div class="publication-single closed pub-'+item.pk+'" data-publication="' + item.pk + '">\
+                    <div class="publication-header">\
+                      <div class="publication-logo">\
+                        <img src="'+item.logo+'" alt="'+item.name+'">\
+                      </div>\
+                      <h4 class="publication-name">'+item.name+'</h4>\
+                      <h4 class="publication-total">$0.00</h4>\
+                    </div>\
+                    <div class="publication-body">\
+                      <div class="ads-list">\
+                        <a href="#" class="add-ads add-link">Add ad placement</a>\
+                      </div>\
+                    </div>\
+                  </div>';
+              plan.full.publications.push({'publication': parseInt(pk), 'total': 0, 'ads': []} )
+              $('.media-type.full').find('.publications-list').append($(html));
+              updateGrandTotal(plan.total)
+            }
+
+          } else {
+            // get week & type
+            var type = $(this).closest('.select-pubs').data('type');
+            var week = $(this).closest('.select-pubs').data('week');
+            var curWeek = $('.media-type[data-week="' + week + '"][data-type="' + type + '"]');
+
+            // check if exists
+            var exists = false;
+            curWeek.find('.publication-single').each(function(index){
+              if($(this).find('.publication-name').text() == value){
+                exists = true;
+              }
+            });
+
+            var item = publications.find(function(el){
+              return el.name == value;
+            })
+
+            var weekIndex = plan.weeks.findIndex(item=>item.pk==week)
+            var pk = item.pk
+
+            if (exists) {
+              // Remove
+              curWeek.find('.pub-' + item.pk + ' .ad-single').each(function(index){
+                if($(this).data('ad')){
+                  deleteAds[type].push($(this).data('ad'))
+                }
+              })
+              curWeek.find('.pub-' + item.pk).remove();
+              var pubIndex = plan.weeks[weekIndex].selectedPubs.findIndex(item=>item.publication==pk)
+              plan.weeks[weekIndex].total -= plan.weeks[weekIndex].selectedPubs[pubIndex].total
+              plan.total -= plan.weeks[weekIndex].selectedPubs[pubIndex].total
+              plan.weeks[weekIndex].selectedPubs.splice(pubIndex, 1)
+              curWeek.closest('.week').find('.week-header-total').text('$' + plan.weeks[weekIndex].total.toFixed(2))
+
+              updateGrandTotal(plan.total)
+              // warn about losing data
+            } else {
+              var html = '<div class="publication-single closed pub-'+item.pk+'" data-publication="' + item.pk + '">\
+                    <div class="publication-header">\
+                      <div class="publication-logo">\
+                        <img src="'+item.logo+'" alt="'+item.name+'">\
+                      </div>\
+                      <h4 class="publication-name">'+item.name+'</h4>\
+                      <h4 class="publication-total">$0.00</h4>\
+                    </div>\
+                    <div class="publication-body">\
+                      <div class="ads-list">\
+                        <a href="#" class="add-ads add-link">Add ad placement</a>\
+                      </div>\
+                    </div>\
+                  </div>';
+              plan.weeks[weekIndex].selectedPubs.push({'publication': parseInt(pk), 'element': $(html), 'total': 0, 'ads': []} )
+              curWeek.find('.publications-list').append($(html));
+              updateGrandTotal(plan.total)
+            }
+          }
+
+        });
+
+        /* Add ad placement */
+        $('.week').on('click', '.add-ads.add-link', function(e){
+          e.preventDefault();
+          var week = $(this).closest('.media-type').data('week');
+          var type = $(this).closest('.media-type').data('type');
+          var publication = $(this).closest('.publication-single').data('publication');
+          var html = '';
+
+          // Design
+          var pubIndex = publications.findIndex(item => item.pk == publication)
+          var weekIndex = plan.weeks.findIndex(item => item.pk == week)
+          var adIndex = $(this).closest('.publication-single').find('.ad-single').length
+
+          var rates = publications[pubIndex].rates
+          if(type=='weekly'){
+            html = ($('#ad-template-weekly').clone());
+            $(html).find('.wrapper-dropdown.page .dropdown').html('');
+
+            // Rates
+            if(rates.length > 0){
+              $(html).find('.wrapper-dropdown.page span').append('<a href="#" data-pk="' + rates[0].pk + '">' + rates[0].name + '</a>');
+              $.each(rates, function(index, value){
+                $(html).find('.wrapper-dropdown.page ul').append('<li><a href="#" data-pk="' + value.pk + '" >' + value.name + '</a></li>');
+              });
+
+              // Designs
+              if(plan.plan.shuffle == 'True'){   
+                design = plan.designs[(pubIndex + 1) % plan.designs.length]      
+              } else {  
+                design = plan.designs[(weekIndex + 1) % plan.designs.length]  
+              }
+              $(html).find('.wrapper-dropdown.image span.dropdown-selected').html('')
+              $(html).find('.wrapper-dropdown.image span.dropdown-selected').append('<div class="image-wrapper" style="background-image: url(' + design.url +'" data-design="' + design.pk + '"></div><span>'+design.name.trimToLength(5)+'</span>');
+
+               // Totals
+              var weekPub = plan.weeks[weekIndex].selectedPubs.findIndex(item => item.publication == publication)
+              plan.weeks[weekIndex].selectedPubs[weekPub].ads.push({'pk': rates[0].pk, 'name': rates[0].name, 'price': rates[0].price, 'element': html})
+
+              $(html).find('.ads-total').text('$' + parseInt(rates[0].price).toFixed(2))
+
+              var ad = plan.weeks[weekIndex].selectedPubs[weekPub].ads.length - 1
+              updateTotals(week, publication, ad)
+            } else {
+              // Alert that no rates
+            }
+          } else if (type == 'daily'){
+            html = ($('#ad-template-daily').clone());
+            $(html).find('.wrapper-dropdown.page .dropdown').html('');
+
+            // Rates
+            if(rates.length > 0){
+              $(html).find('.wrapper-dropdown.page span').append('<a href="#" data-pk="' + rates[0].pk + '">' + rates[0].name + '</a>');
+              $.each(rates, function(index, value){
+                $(html).find('.wrapper-dropdown.page ul').append('<li><a href="#" data-pk="' + value.pk + '" >' + value.name + '</a></li>');
+              });
+
+              // Designs
+              if(plan.plan.shuffle == 'True'){   
+                design = plan.designs[(pubIndex + 1) % plan.designs.length]      
+              } else {  
+                design = plan.designs[(weekIndex + 1) % plan.designs.length]  
+              }
+              $(html).find('.wrapper-dropdown.image span.dropdown-selected').html('')
+              $(html).find('.wrapper-dropdown.image span.dropdown-selected').append('<div class="image-wrapper" style="background-image: url(' + design.url +'" data-design="' + design.pk + '"></div><span>'+design.name.trimToLength(5)+'</span>');
+
+               // Totals
+              var weekPub = plan.weeks[weekIndex].selectedPubs.findIndex(item => item.publication == publication)
+              plan.weeks[weekIndex].selectedPubs[weekPub].ads.push({'pk': rates[0].pk, 'name': rates[0].name, 'price': rates[0].price, 'element': html})
+
+              $(html).find('.ads-total').text('$' + parseInt(rates[0].price).toFixed(2))
+
+
+              var ad = plan.weeks[weekIndex].selectedPubs[weekPub].ads.length - 1
+              updateTotals(week, publication, ad)
+            } else {
+              // Alert that no rates
+            }
+          }  else if (type=='full') {
+            var publication = $(this).closest('.publication-single').data('publication');
+            var html = '';
+
+            // Design
+            var pubIndex = publications.findIndex(item => item.pk == publication)
+            var pub = plan.full.publications.findIndex(item => item.publication == publication)
+            var adIndex = $(this).closest('.publication-single').find('.ad-single').length
+
+            var rates = publications[pubIndex].rates
+            html = ($('#ad-template-full').clone());
+            $(html).find('.wrapper-dropdown.page .dropdown').html('');
+
+            // Rates
+            if(rates.length > 0){
+              $(html).find('.wrapper-dropdown.page span').append('<a href="#" data-pk="' + rates[0].pk + '">' + rates[0].name + '</a>');
+              $.each(rates, function(index, value){
+                $(html).find('.wrapper-dropdown.page ul').append('<li><a href="#" data-pk="' + value.pk + '" >' + value.name + '</a></li>');
+              });
+
+              // Designs
+              design = plan.designs[0]      
+              $(html).find('.wrapper-dropdown.image span.dropdown-selected').html('')
+              $(html).find('.wrapper-dropdown.image span.dropdown-selected').append('<div class="image-wrapper" style="background-image: url(' + design.url +'" data-design="' + design.pk + '"></div><span>'+design.name.trimToLength(5)+'</span>');
+
+               // Totals
+               var ad = {'pk': rates[0].pk, 'name': rates[0].name, 'price': rates[0].price, 'element': html}
+               plan.full.publications[pub].ads.push(ad)
+               plan.full.publications[pub].total += parseInt(rates[0].price)
+               plan.full.total += parseInt(rates[0].price)
+               plan.total += parseInt(rates[0].price)
+
+              $(html).find('.ads-total').text('$' + parseInt(rates[0].price).toFixed(2))
+              displayFullTotals(publication, adIndex)
+            } else {
+              // Alert that no rates
+            }
+
+            var ad = plan.full.publications[pub].ads.length - 1
+          }
+
+          $(html).attr('id', '');
+          $(html).removeClass('template');
+          $(html).data('rate', rates[0].pk);
+          $(html).data('rateId', ad);
+          $(this).before(html)
+
+          $(html).find('.wrapper-dropdown').each(function(index){
+            var dd = new DropDown( $(this));
+          });
+
+          $(html).find('.date-picker').each(function(index) {
+            $(this).dateRangePicker({
+              autoClose: true,
+              singleDate : true,
+              showShortcuts: false,
+              singleMonth: true,
+              showTopbar: false
+            });
+          });
+
+          $('.media-type').find('.wrapper-dropdown.page').on('dd_picked', function(event, el){
+            updateAd(el)
+          });
+        });
+
+        $('.add-extra').click(function(e){
+          e.preventDefault();
+          var html = ($('#ad-template-extra').clone());
+
+          plan.extra.ads.push({'total': 0, 'element': html});
+
+          $(html).attr('id', '');
+          $(html).removeClass('template');
+          $(this).before(html)
+
+          $(html).find('.date-picker').each(function(index) {
+            $(this).dateRangePicker({
+              autoClose: true,
+              singleDate : true,
+              showShortcuts: false,
+              singleMonth: true,
+              showTopbar: false
+            });
+          });
+        })
+
+        function updateTotals(week, publication, adIndex) {
+          var weekIndex = plan.weeks.findIndex(item => item.pk == week)
+          var pubIndex = plan.weeks[weekIndex].selectedPubs.findIndex(item => item.publication == publication)
+
+          var price = parseInt(plan.weeks[weekIndex].selectedPubs[pubIndex].ads[adIndex].price)
+          plan.weeks[weekIndex].selectedPubs[pubIndex].total += price
+          plan.weeks[weekIndex].total += price
+          plan.total += price
+
+          displayTotals(week, publication, adIndex);
+        }
+
+        function displayTotals(week, publication, adIndex) {
+          var weekIndex = plan.weeks.findIndex(item => item.pk == week)
+          var pubIndex = plan.weeks[weekIndex].selectedPubs.findIndex(item => item.publication == publication)
+
+          $(plan.weeks[weekIndex].element).find('.publication-single[data-publication="'+publication+'"]').find('.publication-total').text('$' + plan.weeks[weekIndex].selectedPubs[pubIndex].total.toFixed(2))
+          $(plan.weeks[weekIndex].element).find('.week-header-total').text('$' + parseInt(plan.weeks[weekIndex].total).toFixed(2))
+
+          $('.sidebar').find('.week-total[data-week="' + week + '"]').text('$' + parseInt(plan.weeks[weekIndex].total).toFixed(2))
+          updateGrandTotal(plan.total)
+        }
+
+        function displayTotals(week, publication) {
+          var weekIndex = plan.weeks.findIndex(item => item.pk == week)
+          var pubIndex = plan.weeks[weekIndex].selectedPubs.findIndex(item => item.publication == publication)
+
+          $(plan.weeks[weekIndex].element).find('.publication-single[data-publication="'+publication+'"]').find('.publication-total').text('$' + plan.weeks[weekIndex].selectedPubs[pubIndex].total.toFixed(2))
+          $(plan.weeks[weekIndex].element).find('.week-header-total').text('$' + parseInt(plan.weeks[weekIndex].total).toFixed(2))
+
+          $('.sidebar').find('.week-total[data-week="' + week + '"]').text('$' + parseInt(plan.weeks[weekIndex].total).toFixed(2))
+          updateGrandTotal(plan.total)
+        }
+
+        function displayFullTotals(publication, adIndex) {
+          var pubIndex = plan.full.publications.findIndex(item => item.publication == publication)
+
+          $('.media-type.full').find('.publication-single[data-publication="'+publication+'"] .publication-total').text('$' + plan.full.publications[pubIndex].total.toFixed(2))
+          console.log(plan.full.publications[pubIndex].total.toFixed(2))
+          $('.week.extra').find('.week-header-total').text('$' + parseInt(plan.full.total).toFixed(2))
+          updateGrandTotal(plan.total)
+        }
+
+        function updateGrandTotal(total) {
+          $('.sidebar').find('.grand-total').text('$' + parseInt(total).toFixed(2))
+          $('.sidebar').find('.budget-banner span').text('$' + parseInt(total).toFixed(2))
+
+          var width = 0;
+          if (total > plan.plan.budget) {
+            $('.sidebar').find('.grand-total').addClass('negative');
+            $('.sidebar').find('.budget-banner').addClass('negative');
+            width = 1;
+          } else {
+            $('.sidebar').find('.grand-total').removeClass('negative');   
+            $('.sidebar').find('.budget-banner').removeClass('negative');         
+            width = total / plan.plan.budget;
+          }
+
+          width = width * 100;
+          $('.sidebar').find('.budget-banner div').css('width', width+'%');
+        }
+
+        function updateAd(el){
+          var type = $(el).closest('.media-type').data('type')
+
+          if(type == 'weekly'){
+            var week = $(el).closest('.media-type').data('week')
+            var pub = $(el).closest('.publication-single').data('publication')
+            var rate = $(el).closest('.ad-single').index()
+            var weekIndex = plan.weeks.findIndex(item=>item.pk == week)
+            var pubIndex = plan.weeks[weekIndex].selectedPubs.findIndex(item => item.publication == pub)
+  
+            var rates = publications[publications.findIndex(item => item.pk == pub)].rates 
+            var ratePk = $(el).find('a').data('pk')
+            var newRate = rates[rates.findIndex(item => item.pk == ratePk)]
+            var oldRate = plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rate]
+  
+            plan.weeks[weekIndex].selectedPubs[pubIndex].total -= parseInt(oldRate.price)
+            plan.weeks[weekIndex].total -= parseInt(oldRate.price)
+            plan.total -= parseInt(oldRate.price)
+  
+            plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rate].name = newRate.name
+            plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rate].price = newRate.price
+            plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rate].pk = newRate.pk
+
+            plan.weeks[weekIndex].selectedPubs[pubIndex].total += parseInt(newRate.price)
+            plan.weeks[weekIndex].total += parseInt(newRate.price)
+            plan.total += parseInt(newRate.price)
+  
+            $(el).closest('.ad-single').data('rate', newRate.pk)
+            $(el).closest('.ad-single').find('.ads-total').text('$' + parseInt(newRate.price).toFixed(2))
+            displayTotals(week, pub, rate)
+          } else if (type == 'daily') {
+            var week = $(el).closest('.media-type').data('week')
+            var pub = $(el).closest('.publication-single').data('publication')
+            var rate = $(el).closest('.ad-single').index()
+            var weekIndex = plan.weeks.findIndex(item=>item.pk == week)
+            var pubIndex = plan.weeks[weekIndex].selectedPubs.findIndex(item => item.publication == pub)
+  
+            var rates = publications[publications.findIndex(item => item.pk == pub)].rates 
+            var ratePk = $(el).find('a').data('pk')
+            var newRate = rates[rates.findIndex(item => item.pk == ratePk)]
+            var oldRate = plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rate]
+            var original = rates[rates.findIndex(item=>item.pk==oldRate.pk)]
+            var num = oldRate.price / original.price
+
+            var price = parseInt(newRate.price) * num
+
+            plan.weeks[weekIndex].selectedPubs[pubIndex].total -= parseInt(oldRate.price)
+            plan.weeks[weekIndex].total -= parseInt(oldRate.price)
+            plan.total -= parseInt(oldRate.price)
+  
+            plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rate].name = newRate.name
+            plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rate].price = price
+            plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rate].pk = newRate.pk
+
+            plan.weeks[weekIndex].selectedPubs[pubIndex].total += price
+            plan.weeks[weekIndex].total += price
+            plan.total += price
+
+            $(el).closest('.ad-single').data('rate', newRate.pk)
+            $(el).closest('.ad-single').find('.ads-total').text('$' + parseInt(price).toFixed(2))
+            displayTotals(week, pub, rate)
+          } else if (type == 'full') {
+            var pub = $(el).closest('.publication-single').data('publication')
+            var rate = $(el).closest('.ad-single').index()
+            var pubIndex = plan.full.publications.findIndex(item => item.publication == pub)
+  
+            var rates = publications[publications.findIndex(item => item.pk == pub)].rates 
+            var ratePk = $(el).find('a').data('pk')
+            var newRate = rates[rates.findIndex(item => item.pk == ratePk)]
+            var oldRate = plan.full.publications[pubIndex].ads[rate]
+  
+            plan.full.publications[pubIndex].total -= parseInt(oldRate.price)
+            plan.full.total -= parseInt(oldRate.price)
+            plan.total -= parseInt(oldRate.price)
+  
+            plan.full.publications[pubIndex].ads[rate].name = newRate.name
+            plan.full.publications[pubIndex].ads[rate].price = newRate.price
+            plan.full.publications[pubIndex].ads[rate].pk = newRate.pk
+            $(this).closest('.ad-single').data('rate', newRate.pk)
+
+            plan.full.publications[pubIndex].total += parseInt(oldRate.price)
+            plan.full.total += parseInt(oldRate.price)
+            plan.total += parseInt(oldRate.price)
+
+            $(el).closest('.ad-single').data('rate', newRate.pk)
+            $(el).closest('.ad-single').find('.ads-total').text('$' + parseInt(newRate.price).toFixed(2))
+            displayFullTotals(pub, rate)
+          }
+        }
+
+        $('.week').on('click', '.media-type .ad-single .day-select button', function(e){
+          e.preventDefault();
+          $(this).toggleClass('clicked');
+
+          // Add rate price to total
+          var publication = $(this).closest('.publication-single').data('publication')
+          var weekIndex =  plan.weeks.findIndex(item => item.pk == $(this).closest('.media-type').data('week'));
+          var pubIndex = plan.weeks[weekIndex].selectedPubs.findIndex(item => item.publication == $(this).closest('.publication-single').data('publication'));
+          var rateIndex = $(this).closest('.ad-single').index()
+          var pub = publications.findIndex(item => item.pk == publication)
+          var rate = publications[pub].rates[publications[pub].rates.findIndex(item => item.pk == $(this).closest('.ad-single').data('rate'))];
+
+          if($(this).hasClass('clicked')){
+              plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rateIndex].price =  parseInt(plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rateIndex].price) + parseInt(rate.price);
+              plan.weeks[weekIndex].selectedPubs[pubIndex].total += parseInt(rate.price);
+              plan.weeks[weekIndex].total += parseInt(rate.price);
+              plan.total += parseInt(rate.price);
+          } else {
+              plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rateIndex].price =  parseInt(plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rateIndex].price) - parseInt(rate.price);
+              plan.weeks[weekIndex].selectedPubs[pubIndex].total -= parseInt(rate.price);
+              plan.weeks[weekIndex].total -= parseInt(rate.price);
+              plan.total -= parseInt(rate.price);            
+          }
+          $(this).closest('.ad-single').find('.ads-total').text('$' + parseInt(plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rateIndex].price).toFixed(2))
+          displayTotals($(this).closest('.media-type').data('week'), publication, rateIndex);
+        });
+
+        $('.media-type').find('.wrapper-dropdown.page').on('dd_picked', function(event, el){
+          updateAd(el);
+        });
+
+        $('.save-selected-pubs').click(function(e){
+          e.preventDefault();
+          $.magnificPopup.close();
+        });
+
+        $('.media-type.extra').on('change', '.total-input', function(e){
+          var total = $(this).val();
+          var index = $(this).closest('.ad-single').index();
+          var old = plan.extra.ads[index]
+          console.log(plan.extra.ads)
+          plan.extra.total -= parseInt(old.total)
+          plan.full.total -= parseInt(old.total)
+          plan.total -= parseInt(old.total)
+
+          plan.extra.ads[index].total = parseInt(total)
+          plan.extra.total += parseInt(total)
+          plan.full.total += parseInt(total)
+          plan.total += parseInt(total)
+
+          $(this).closest('.week').find('.week-header-total').text('$' + parseInt(plan.full.total).toFixed(2));
+          $(this).closest('.publication-single').find('.publication-total').text('$' + parseInt(plan.extra.total).toFixed(2)); 
+          updateGrandTotal(plan.total);
+        });
+
+        var deleteAds = {'weekly': [], 'daily': [], 'full': [], 'extra': []}
+        $('.week').on('click', '.delete-ad', function(e){
+          e.preventDefault()
+          var type = $(this).closest('.media-type').data('type')
+          if($(this).closest('.ad-single').data('ad')){
+            if(type=='weekly'){
+              deleteAds['weekly'].push($(this).closest('.ad-single').data('ad'))
+            } else if (type=='daily'){
+              deleteAds['daily'].push($(this).closest('.ad-single').data('ad'))
+            } else if (type=='full'){
+              deleteAds['full'].push($(this).closest('.ad-single').data('ad'))
+            } else if (type=='extra'){
+              deleteAds['extra'].push($(this).closest('.ad-single').data('ad'))
+            }
+          }
+          if(type=='daily' || type=='weekly') {
+            var week = $(this).closest('.media-type').data('week')
+            var pub = $(this).closest('.publication-single').data('publication')
+
+            var weekIndex = plan.weeks.findIndex(item=>item.pk == week)
+            var pubIndex = plan.weeks[weekIndex].selectedPubs.findIndex(item=>item.publication == pub)
+            var rateIndex = $(this).closest('.ad-single').index()
+
+            var rate = plan.weeks[weekIndex].selectedPubs[pubIndex].ads[rateIndex]
+
+            plan.weeks[weekIndex].selectedPubs[pubIndex].total -= parseInt(rate.price)
+            plan.weeks[weekIndex].total -= parseInt(rate.price)
+            plan.total -= parseInt(rate.price)
+            plan.weeks[weekIndex].selectedPubs[pubIndex].ads.splice(rateIndex, 1)
+            $(this).closest('.ad-single').remove()
+
+            displayTotals(week, pub)
+          } else if (type=='full') {
+            var pub = $(this).closest('.publication-single').data('publication')
+            var pubIndex = plan.full.publications.findIndex(item => item.publication == pub)
+            var rateIndex = $(this).closest('.ad-single').index()
+            var rate = plan.full.publications[pubIndex].ads[rateIndex]
+
+            plan.full.publications[pubIndex].total -= parseInt(rate.price)
+            plan.full.total -= parseInt(rate.price)
+            plan.total -= parseInt(rate.price)
+            plan.full.publications[pubIndex].ads.splice(rateIndex, 1)
+            $(this).closest('.ad-single').remove()
+
+            displayFullTotals(pub, rateIndex)
+          } else {
+            var rateIndex = $(this).closest('.ad-single').index()
+            var rate = plan.extra.ads[rateIndex]
+
+            plan.full.total -= parseInt(rate.total)
+            plan.extra.total -= parseInt(rate.total)
+            plan.total -= parseInt(rate.total)
+            plan.extra.ads.splice(rateIndex, 1)
+
+            $(this).closest('.publication-single').find('.publication-total').text('$'+parseInt(plan.extra.total).toFixed(2));
+            $(this).closest('.week').find('.week-header-total').text('$'+parseInt(plan.full.total).toFixed(2));
+            $(this).closest('.ad-single').remove()
+            updateGrandTotal(plan.total)
+          }
+        });
+
+        /* Submit */
+        function getToken() {
+          function getCookie(name) {
+              var cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  var cookies = document.cookie.split(';');
+                  for (var i = 0; i < cookies.length; i++) {
+                      var cookie = jQuery.trim(cookies[i]);
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+          var csrftoken = getCookie('csrftoken');
+          function csrfSafeMethod(method) {
+              return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+          }
+          return csrftoken;
+        }
+        function submit(action) {          
+          var newAds = {'weekly': [], 'daily': [], 'full': [], 'extra': []}
+          var editAds = {'weekly': [], 'daily': [], 'full': [], 'extra': []}
+          $('.week').find('.ad-single').each(function(index, value){
+            if( !$(this).hasClass('template') ){
+              var type = $(this).closest('.media-type').data('type');
+
+              if (type == 'weekly'){
+                var rate = $(this).data('rate')
+                var design = $(this).find('.wrapper-dropdown.image .dropdown-selected .image-wrapper').data('design')
+                var deadline = $(this).find('.date-picker').val()
+                var week = $(this).closest('.media-type').data('week')
+                var ad = {rate: rate, design: design, deadline: deadline, week: week}         
+                if($(this).data('ad')){
+                  ad.pk = $(this).data('ad')
+                  editAds.weekly.push(ad)                  
+                } else {
+                  newAds.weekly.push(ad)
+                }
+              } else if (type == 'daily'){
+                var rate = $(this).data('rate')
+                var design = $(this).find('.wrapper-dropdown.image .dropdown-selected .image-wrapper').data('design')
+                var days = []
+                $(this).find('.day-select .clicked').each(function(index, value){
+                  days.push($(this).text())
+                });
+                var week = $(this).closest('.media-type').data('week')
+                var ad = {rate: rate, design: design, days: days, week: week}
+                if($(this).data('ad')){
+                  ad.pk = $(this).data('ad')
+                  editAds.daily.push(ad)                  
+                } else {
+                  newAds.daily.push(ad)
+                }
+              } else if (type == 'full') {
+                var rate = $(this).data('rate')
+                var design = $(this).find('.wrapper-dropdown.image .dropdown-selected .image-wrapper').data('design')
+                console.log(design)
+                var deadline = $(this).find('.date-picker').val()
+                var ad = {rate: rate, design: design, deadline: deadline}
+                if($(this).data('ad')){
+                  ad.pk = $(this).data('ad')
+                  editAds.full.push(ad)                  
+                } else {
+                  newAds.full.push(ad)
+                }
+              } else if (type == 'extra') {
+                var name = $(this).find('.name-input').val()
+                var date = $(this).find('.date-picker').val()
+                var price = $(this).find('.total-input').val()
+                var ad = {name: name, deadline: date, price: price}
+                if(name.length > 0 && price.length > 0){
+                  if($(this).data('ad')){
+                    ad.pk = $(this).data('ad')
+                    editAds.extra.push(ad)                  
+                  } else {
+                    newAds.extra.push(ad)
+                  }       
+                } else {
+                  console.log('error');
+                }
+              } 
+            } 
+
+          });
+
+           var data = new FormData();
+           data.append('new', JSON.stringify(newAds))
+           data.append('delete', JSON.stringify(deleteAds))
+           data.append('edit', JSON.stringify(editAds))
+
+           console.log(newAds)
+           console.log(deleteAds)
+           console.log(editAds)
+
+            // Save
+            $.ajax({
+              url: window.location.pathname,
+              data: data,
+              headers: {"X-CSRFToken": getToken()},
+              contentType: false,
+              cache: false,
+              processData: false, 
+              method: 'POST'
+            }).done(function(data) { 
+              if(data.code == "200") {
+                  if(action == 'continue'){
+                    updateStatus('approve')
+                  } else if (action == 'save'){
+                    // Message saved
+                  }
+                } 
+            });
+
+
+        }
+
+        function updateStatus(status){
+          var data = new FormData();
+          data.append('status', status);
+          $.ajax({
+            url: "{% url 'update_status' plan.pk %}",
+            data: data,
+            headers: {"X-CSRFToken": getToken()},
+            contentType: false,
+            cache: false,
+            processData: false,
+            method: 'POST'
+          }).done(function(data){
+            if(data.code == "200") {
+              window.location.href = "{% url 'continue_plan' plan.pk %}"
+            }
+          })
+        }
+
+        $('#continue').click(function(e){
+          submit('continue');
+        });
+
+        $('#save').click(function(e){
+          submit('save');
+        });
+
+        $('#delete').magnificPopup({
+          type: 'inline',
+          midClick: true
+        });
+
+        $('#cancel-delete').click(function(e){
+          e.preventDefault();
+          $.magnificPopup.close(); 
+        });
+      });
+    </script>
+{% endblock %}

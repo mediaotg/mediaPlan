@@ -1,0 +1,397 @@
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/awesomplete.css' %}">
+<link rel="stylesheet" href="{% static 'css/selectize.css' %}">
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+<link rel="stylesheet" href="{% static 'css/publications.css' %}">
+{% endblock %}
+
+{% block title %}{{ publication.name }}{% endblock %}
+
+{% block content %}
+
+<div class="form edit-form new-publication">
+  <form method="post" novalidate>
+
+    {% csrf_token %}
+
+    <input type="hidden" id="logo-hidden-input" name="logo" value="{{ publication.logo.pk }}">
+
+    <div class="form-input input-field image-input">
+        {{ form.logo.label_tag }}
+        <div class="logo-wrapper">
+            <label for="logo-input" class="image-input-label"><span>+</span></label>
+                <input type="file" id="logo-input" name="logo-file" />
+        </div>
+        {% for error in form.logo.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div> 
+        {% endfor %}
+    </div>
+
+    {% if form.errors %}
+      <p>There are errorrs</p>
+    {% endif %}
+    <div class="form-input input-field">
+        {{ form.name.label_tag }}
+        {% render_field form.name %}
+        {% for error in form.name.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div> 
+        {% endfor %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.contactName.label_tag }}
+        {% render_field form.contactName %}
+        {% for error in form.contactName.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div> 
+        {% endfor %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.email.label_tag }}
+        {% render_field form.email %}
+        {% for error in form.email.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div> 
+        {% endfor %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.phone.label_tag }}
+        {% render_field form.phone %}
+        {% for error in form.phone.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div> 
+        {% endfor %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.targetGroups.label_tag }}
+      <div class="group-table-wrapper">
+        <div class="hidden">
+          {% render_field form.targetGroups class="target-multi" %}
+        </div>
+        <div class="group-single">
+          <ul class="groups-wrapper">
+          </ul>
+          <input class="awesome" value="" />
+        </div>
+      </div>
+        {% for error in form.targetGroups.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div> 
+        {% endfor %}
+    </div>
+
+    <div class="form-input input-field">
+        {{ form.recurrence.label_tag }}
+        {% render_field form.recurrence class="selectize" %}
+        {% for error in form.recurrence.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div> 
+        {% endfor %}
+    </div>
+
+    <div class="pricing">
+        <div class="form-input input-field">
+            <label>Rates</label>
+            <div class="rates-table-wrapper">
+                <div class="rates-table">
+                </div>
+                <a href="#" class="add-rate">+</a>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="buttons-wrapper">
+      <button class="button" id="save-publication" type="submit">Save Publication</button>
+      <a href="#delete-popup" class="button button-danger" id="delete-publication">Delete Publication</a>
+    </div>
+  </form>
+
+  <div id="delete-popup" class="white-popup mfp-hide">
+    <h2>Delete</h2>
+    <p>Are you sure you want to permanently delete '{{ publication.name }}'?</p>
+    <div class="buttons-wrapper">
+      <button class="button" id="cancel-delete">Cancel</button>
+      <a href="{% url 'delete_publication' pk=publication.pk %}" class="button button-danger" id="delete-confirm">Delete</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/awesomplete.min.js' %}"></script>
+    <script src="{% static 'js/selectize.min.js' %}"></script>
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script>
+
+        $(document).ready(function() {
+            var logo = $('#logo-hidden-input');
+            var deleteRates = [];
+
+            /* Target Groups */
+            var groups = [];
+            {% for group in groups %}
+                groups.push({value: '{{ group.name }}', label: '{{ group.name }}', pk: '{{ group.pk }}'})
+            {% endfor %}
+
+            var item = $('.group-table-wrapper .awesome')[0];
+            var list = [];
+            {% for group in publication.targetGroups.all %}
+                list.push('{{ group.name }}');
+                $('.groups-wrapper').append('<li class="group"><a href="#">x</a><span>{{ group.name }}</span></li>');
+                $('.target-multi option').filter(function() { return $(this).html() == "{{ group.name }}"; }).attr('selected', 'selected');
+            {% endfor %}
+
+            var awe = new Awesomplete(item, {
+                list: groups,
+                filter: function(text, input) {
+                    var match = Awesomplete.FILTER_CONTAINS(text, input.match(/[^,]*$/)[0]);
+
+                    var listIndex = list.indexOf(text.label);
+                    if (listIndex > -1) {
+                        return false;
+                    } 
+
+                    var values = input.split(",");
+                    $.each(values, function(index, value){
+                        if(text.label == value){
+                            return false
+                        }
+                    })
+                    return match;
+                },
+
+                item: function(text, input) {
+                    return Awesomplete.ITEM(text, input.match(/[^,]*$/)[0]);
+                },
+
+                replace: function(text) {
+                    list.push(text.label);
+                    $('.groups-wrapper').append('<li class="group"><a href="#">x</a><span>' + text + '</span></li>');
+                    $('.target-multi option').filter(function () { return $(this).html() == text; }).attr('selected', 'selected');
+                    this.input.value = '';
+                }
+            });
+            Awesomplete.$.bind(item, { "awesomplete-open":function(event) {
+              $('.awe').removeClass('active');
+              $(item).closest('.form-input').addClass('active');
+            }});
+
+            $('.groups-wrapper').on('click', '.group a', (function(e){
+                e.preventDefault();
+
+                var item = $(this).siblings('span').text();
+                var index = list.indexOf(item);
+                list.splice(index, 1);
+
+                $(this).parent('li').remove();
+                $('.target-multi option').filter(function () { return $(this).html() == item; }).removeAttr('selected');
+            }));
+
+            /* Logo */
+            if(logo.val().length > 1){
+              var parent = $('#logo-input').closest('.logo-wrapper');
+              parent.addClass('loading');
+              parent.find('.image-input-label').html('<div class="thumbnail"></div><div class="loader"></div>');
+              parent.find('.image-input-label .thumbnail').css("background-image", "url(../../../uploads/{{ publication.logo.image }})");
+              parent.addClass('dz-complete dz-success');                   
+            }
+            function uploadFiles(el, file){
+                var form = $('.new-publication form')[0];
+                var formData = new FormData(form);
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'upload_image' %}",
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                }).done(function(data) {
+                    if(data.code == "200") {
+                        logo.val(data.image);
+                        el.addClass('dz-complete dz-success');                            
+                    }
+                });
+            }
+            $('#logo-input').change(function(e){
+              if(this.files && this.files[0]) {
+                var reader = new FileReader();
+                var input = this;
+                var parent = $(this).closest('.logo-wrapper');
+                reader.onload = function(e) {
+                  parent.addClass('loading');
+                  parent.find('.image-input-label').html('<div class="thumbnail"></div><div class="loader"></div>');
+                  parent.find('.image-input-label .thumbnail').css("background-image", "url(" + e.target.result + ")");
+                }
+                reader.readAsDataURL(this.files[0]);
+              } 
+              var logoFile = $(this)[0].files;
+              uploadFiles(parent, logoFile);
+            });
+
+            var select = $(".selectize").selectize({
+                create: true,
+                sortField: 'text'
+            });
+
+            /* Phone */
+            function phoneMask() { 
+              var num = $(this).val().replace(/\D/g,''); 
+              $(this).val(num.substring(0,1) + '(' + num.substring(1,4) + ')' + num.substring(4,7) + '-' + num.substring(7,11));   
+            }
+            $('[name="phone"]').keyup(phoneMask);
+
+            /* Pricing */
+            $('.pricing').on("click", ".add-rate", function(e){
+              e.preventDefault();
+              var el = $(this).siblings('.rates-table');
+              addRate(el);
+            });
+            {% for rate in publication.rates.all %}
+              {% if rate.client == None %}
+                addRate($('.rates-table'), '{{ rate.pk }}', '{{ rate.rateName }}', '{{ rate.dimensions }}', '{{ rate.bleed }}', '{{ rate.price }}',)
+              {% endif %}
+            {% endfor %}
+            function addRate(el, pkVal, nameVal, sizeVal, bleedVal, priceVal ) {
+              var wrapper = $('<div class="rate-line"><a href="#" class="delete-rate-line">–</div></div>');
+              var totalInput = $('<div class="form-input input-field total-input"><label class="inner-label">$</label><input type="text" class="number" name="price" /></div>');
+              if(priceVal){
+                totalInput = $('<div class="form-input input-field total-input"><label class="inner-label">$</label><input type="text" class="number" name="price" value="' + priceVal + '" /></div>');
+              }
+              var pageSize = $('<div class="form-input input-field"><input class="awesomplete" placeholder="Dimensions" name="dimensions" /></div>');
+              if(sizeVal){
+                pageSize = $('<div class="form-input input-field"><input class="awesomplete" placeholder="Dimensions" name="dimensions" value="' + sizeVal + '"/></div>');
+              }
+              var pageBleed = $('<div class="form-input input-field"><input class="awesomplete" placeholder="Bleed" name="bleed" /></div>')
+              if(bleedVal){
+                pageBleed = $('<div class="form-input input-field"><input class="awesomplete" placeholder="Bleed" name="bleed" value="' + bleedVal + '"/></div>')
+              }
+              var pageName = $('<div class="form-input input-field"><input class="awesomplete" placeholder="Page Name" name="pageName" /></div>');
+              if(nameVal){
+                pageName = $('<div class="form-input input-field"><input class="awesomplete" placeholder="Page Name" name="pageName" value="' + nameVal + '"/></div>');
+              }
+              var pagePk = $('<div class="hidden"><input type="hidden" name="ratePk" ></div>');
+              if(pkVal){
+                pagePk = $('<div class="hidden"><input type="hidden" name="ratePk" value="' + pkVal + '"></div>');
+              }
+
+              wrapper.append(pagePk);
+              wrapper.append(pageName);
+              wrapper.append(pageSize);
+              wrapper.append(pageBleed);
+              wrapper.append(totalInput);
+
+              el.append(wrapper);
+
+              pageName.find('.awesomplete').each(function(i, item){
+                new Awesomplete(item, {
+                  minChars: 1
+                });
+                Awesomplete.$.bind(item, { "awesomplete-open":function(event) {
+                  $('.rate-line').removeClass('active');
+                  $(item).closest('.rate-line').addClass('active');
+                }});
+              });
+
+              pageSize.find('.awesomplete').each(function(i, item){
+                new Awesomplete(item, {
+                  minChars: 1
+                });
+                Awesomplete.$.bind(item, { "awesomplete-open":function(event) {
+                  $('.rate-line').removeClass('active');
+                  $(item).closest('.rate-line').addClass('active');
+                }});
+              });
+
+              pageBleed.find('.awesomplete').each(function(i, item){
+                new Awesomplete(item, {
+                  minChars: 1
+                });
+                Awesomplete.$.bind(item, { "awesomplete-open":function(event) {
+                  $('.rate-line').removeClass('active');
+                  $(item).closest('.rate-line').addClass('active');
+                }});
+              });
+            }
+
+            $('.pricing').on('click', '.delete-rate-line', function(e){
+              e.preventDefault();
+              var rateLine = $(this).closest('.rate-line');
+              if(rateLine.has('input[name="pk"]')){
+                deleteRates.push(rateLine.find('input[name="ratePk"]').val())
+              }
+              $(this).closest('.rate-line').remove();
+            });
+
+            /* Submit Form */
+            $('form').submit(function(e){
+                e.preventDefault();
+                console.log('submitted');
+
+                var data = new FormData(e.target);
+                var ratesArray = [];
+                var rates = $('.rates-table').children('.rate-line');
+                $.each(rates, function(index, value){
+                    var rate = {};
+                    rate['pk'] = $(value).find('input[name="ratePk"]').val();
+                    rate['name'] = $(value).find('input[name="pageName"]').val();
+                    rate['size'] = $(value).find('input[name="dimensions"]').val();
+                    rate['bleed'] = $(value).find('input[name="bleed"]').val();
+                    rate['price'] = $(value).find('input[name="price"]').val();
+                    data.append('rates', JSON.stringify(rate));
+                })
+                data.append('deleteRates', JSON.stringify(deleteRates));
+
+                $.ajax({
+                    type: 'POST',
+                    url: window.location.pathname,
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                }).done(function(data) {
+                    if(data.code == "200") {
+                        console.log(data.publication);
+                        window.location.href = "/setup/publications/" + data.publication;
+                    } else if(data.code == "300"){
+                      $('.invalid-feedback').remove();
+                      $('.form-input').removeClass('invalid');
+                      $.each(data.errors, function(key, value){
+                        var el = $('#id_' + key);
+                        el.closest('.form-input').addClass('invalid');
+                        el.closest('.form-input').append('<div class="invalid-feedback">' + value + '</div>');       
+                      })
+                    }
+                });
+
+            });
+
+            // Delete 
+            $('#delete-publication').magnificPopup({
+              type: 'inline',
+              midClick: true
+            });
+
+            $('#cancel-delete').click(function(e){
+              e.preventDefault();
+              $.magnificPopup.close(); 
+            });
+        })
+    </script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/plans.css' %}">
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+{% endblock %}
+
+{% block title %}Clients{% endblock %}
+{% block content %}
+<div class="top-wrapper">
+    <div class="searchbar">
+      <input type="text" class="searchbar-input" placeholder="Search" />
+      <a href="#" class="search-button"><i class="fas fa-search"></i></a>
+    </div> 
+    <div class="buttons-wrapper">
+      <a href="#import-popup" class="button" id="import">Import</a>
+      <a href="{% url 'new_plan' %}" class="button" id="new-plan">New Plan</a>
+    </div>
+</div>
+
+<div class="table striped-table main-table">
+  <table id="plans-table" style="width: 100%">
+    <thead>
+      <tr>
+        <td>Info</td>
+        <td>Name</td>
+        <td>Logo</td>
+        <td>Client</td>
+        <td>Dates</td>
+        <td>EndDate</td>
+        {% if plan.client.parent != None %}<td>Parent</td>{% endif %}
+        <td>Designs</td>
+        <td>Uploaded</td>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+
+
+  <div id="import-popup" class="white-popup mfp-hide">
+    <h2>Import Publications</h2>
+    <p>Select a file and upload to import target groups.</p>
+    <form method="post" enctype="multipart/form-data" action="{% url 'upload_clients' %}" id="import-form">
+        {% csrf_token %}
+        <input type="file" name="myfile" id="fileselect">
+        <button class="button light" id="fileselect-button">Choose File</button>
+        <button class="button" type="submit" id="import-button" disabled="disabled">Upload</button>
+    </form>
+    <p id="import-form-error">There was an error uploading the file. Check that there are no duplicates in the file.</p>
+  </div>
+</div>
+{% endblock %}
+{% block javascript %}
+    <script src="http://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            var data = [];
+            var plans = [];
+            {% for plan in plans %}
+                var img = ''
+
+                var plan = {'pk': {{plan.pk}}, 'name': '{{plan.name}}', 'designs': [], 'client': '{{plan.client}}', 'parent': '{{plan.client.parent}}', 'dates': '{{plan.dates}}', 'budget': '{{plan.budget}}', 'status': '{{plan.status}}'}
+                {% for design in plan.designs.all %} 
+                    {% if design.thumbnail != None %} img = '{{design.thumbnail}}'{% endif %}
+                    plan.designs.push({'pk': '{{design.pk}}', 'name': '{{design.name}}', 'thumbnail': '{{design.thumbnail}}'})
+                {% endfor %}
+                plans.push(plan)
+
+                var line = [{{ plan.pk }}, '{{ plan.name }}', '{{ plan.designs.first.thumbnail }}', '{{ plan.client }}', '{{ plan.startDate }}', '{{ plan.endDate }}', {% if plan.client.parent != None %} '{{ plan.client.parent }}' ,{% endif %} '{{ plan.designs.count }}', '0']
+                if (img != '') {
+                    line[2] = img
+                }
+                data.push(line);
+            {% endfor %}
+            var table = $('#plans-table').DataTable({
+                data: data,
+                columnDefs: [
+                    {
+                        render: function(data, type, row) {
+                            var status = row[row.length - 1]
+                            var location = '/plans/designs/' + row[0] + ''
+                            var planIndex = plans.findIndex(item => item.pk == row[0])
+                            return '<a class="info-wrapper" href="' + location + '"><div class="image-wrapper" style="background-image: url(' + row[2] + ')" /></div><h6>' + row[1] + '</h6><p>' + row[3] + {% if plan.client.parent != None %}' - ' + row[6] + {% endif %} '</p></a>';
+                        },
+                        targets: 0
+                    },
+                    {
+                        render: function(data, type, row) {
+                            return row[4] + ' - ' + row[5];
+                        },
+                        targets: 4
+                    },
+                    { visible: false, targets: [1, 2, 3, 5{% if plan.client.parent != None %}, 6{% endif %}] }
+                ],
+                dom: '<"top"<"clear">>t<"bottom" p <"clear">>',
+                pageLength: 10
+            });
+            $('.searchbar-input').on('keyup change', function() {
+                table.search(this.value).draw();
+            })
+        })
+    </script>
+{% endblock %}

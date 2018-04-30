@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+<link rel="stylesheet" href="{% static 'css/slick.css' %}">
+<link rel="stylesheet" href="{% static 'css/designs.css' %}">
+{% endblock %}
+
+{% block title %}Clients{% endblock %}
+{% block content %}
+<div class="top-wrapper">
+    <div class="searchbar">
+      <input type="text" class="searchbar-input" placeholder="Search" />
+      <a href="#" class="search-button"><i class="fas fa-search"></i></a>
+    </div> 
+    <div class="buttons-wrapper">
+      <a href="#import-popup" class="button" id="import">Import</a>
+      <a href="{% url 'new_plan' %}" class="button" id="new-plan">New Plan</a>
+    </div>
+</div>
+<div class="cards-wrapper">
+    {% for plan in plans %}
+        <div class="card">
+            <div class="slider">
+                {% for design in plan.designs.all %}
+                <div class="item">
+                    <img src="{{design.thumbnail}}" />
+                </div>
+                {% endfor %}
+            </div>
+            <div class="card-info">
+                <a href="{% url 'designs_campaign' plan.pk %}"><h5>{{plan.name}}</h5></a>
+                <p>{{plan.startDate}}</p>
+                <p>{{plan.client}} {% if plan.client.parent %} - {{plan.client.parent}} {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'js/slick.min.js' %}"></script>
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            $('.slider').slick({
+              arrows: false,
+              dots: true
+            });
+        })
+    </script>
+{% endblock %}

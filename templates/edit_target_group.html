@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/awesomplete.css' %}">
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+<link rel="stylesheet" href="{% static 'css/target-groups.css' %}">
+{% endblock %}
+
+{% block title %}{{ group.name }}{% endblock %}
+
+{% block content %}
+<div class="form edit-form {% if form.errors %}error{% endif %}">
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger" role="alert">
+      {% for error in form.non_field_errors %}
+        <p{% if forloop.last %} class="mb-0" {% endif %}>{{ error }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-input input-field {% if form.name.errors %}invalid{% endif %}">
+      {{ form.name.label_tag }}
+      {% render_field form.name type="text" %}
+
+      {% for error in form.name.errors %}
+        <div class="invalid-feedback err-msg">
+          {{ error }}
+        </div> 
+      {% endfor %}
+    </div>
+    <div class="form-input input-field">
+        {{ form.publications.label_tag }}
+      <div class="pub-table-wrapper">
+        <div class="hidden">
+          {% render_field form.publications class="publication-multi" %}
+        </div>
+        <div class="pub-single">
+          <ul class="publications-wrapper">
+            {% for pub in group.publications.all %}
+                <li class="pub"><a href="#">x</a><span>{{ pub.name}}</span></li>
+            {% endfor %}
+          </ul>
+          <input class="awesome" value="" />
+        </div>
+      </div>
+      
+      {% for error in form.publications.errors %}
+        <div class="invalid-feedback err-msg">
+          {{ error }}
+        </div> 
+      {% endfor %}
+    </div>
+
+    <div class="buttons-wrapper">
+      <button class="button" id="save-group" type="submit">Save Target Group</button>
+      <a href="#delete-popup" class="button button-danger" id="delete-group">Delete Target Group</a>
+    </div>
+  </form>
+
+  <div id="delete-popup" class="white-popup mfp-hide">
+    <h2>Delete</h2>
+    <p>Are you sure you want to permanently delete '{{ group.name }}'?</p>
+    <div class="buttons-wrapper">
+      <button class="button" id="cancel-delete">Cancel</button>
+      <a href="{% url 'delete_group' pk=group.pk %}" class="button button-danger" id="delete-confirm">Delete</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/awesomplete.min.js' %}"></script>
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+
+            var pubs = [];
+            {% for pub in publications %}
+                pubs.push({value: '{{ pub.name }}', label: '{{ pub.name }}', pk: '{{ pub.pk }}'})
+            {% endfor %}
+
+            var item = $('.pub-table-wrapper .awesome')[0];
+            var list = [];
+            {% for pub in group.publications.all %}
+                list.push("{{ pub.name}}");
+            {% endfor %}
+
+            var awe = new Awesomplete(item, {
+                list: pubs,
+                filter: function(text, input) {
+                    var match = Awesomplete.FILTER_CONTAINS(text, input.match(/[^,]*$/)[0]);
+
+                    var listIndex = list.indexOf(text.label);
+                    if (listIndex > -1) {
+                        return false;
+                    } 
+
+                    var values = input.split(",");
+                    $.each(values, function(index, value){
+                        if(text.label == value){
+                            return false
+                        }
+                    })
+                    return match;
+                },
+
+                item: function(text, input) {
+                    return Awesomplete.ITEM(text, input.match(/[^,]*$/)[0]);
+                },
+
+                replace: function(text) {
+                    list.push(text.label);
+                    $('.publications-wrapper').append('<li class="pub"><a href="#">x</a><span>' + text + '</span></li>');
+                    $('.publication-multi option').filter(function () { return $(this).html() == text; }).attr('selected', 'selected');
+                }
+            });
+
+            $('.publications-wrapper').on('click', '.pub a', (function(e){
+                e.preventDefault();
+
+                var item = $(this).siblings('span').text();
+                var index = list.indexOf(item);
+                list.splice(index, 1);
+
+                $(this).parent('li').remove();
+                $('.publication-multi option').filter(function () { return $(this).html() == item; }).removeAttr('selected');
+            }));
+
+
+            // Delete 
+            $('#delete-group').magnificPopup({
+              type: 'inline',
+              midClick: true
+            });
+
+            $('#cancel-delete').click(function(e){
+              e.preventDefault();
+              $.magnificPopup.close(); 
+            });
+        })
+    </script>
+{% endblock %}ß

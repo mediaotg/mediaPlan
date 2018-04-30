@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+{% load humanize %} 
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+<link rel="stylesheet" href="{% static 'css/selectize.css' %}">
+<link rel="stylesheet" href="{% static 'css/plans.css' %}">
+{% endblock %}
+
+{% block title %}{{plan.name}} Media Plan{% endblock %}
+
+{% block content %}
+<div class="main-content continue">
+
+  <!-- Tab links -->
+  <div class="tab">
+    <button class="tablinks" data-open="approve">Approve by Client</button>
+    <button class="tablinks" data-open="design">Upload Designs</button>
+    <button class="tablinks" data-open="book">Book Media</button>
+    <button class="tablinks" data-open="complete">Tear Sheets</button>
+  </div>
+
+  <!-- Tab content -->
+  <div id="approve" class="tabcontent">
+    <div class="top-bar">
+      <h6>Status: {% if plan.status == 'approve' %}Pending Approval {% else %} Approved {% endif %}</h6>
+      <select class="selectize">
+        <option value="send">Send to Client</option>
+        <option value="download">Download PDF</option>
+        <option value="approve">Mark Approved</option>
+        <option value="unapprove">Mark Unapproved</option>
+      </select>
+    </div>
+    <div class="main-card">
+      <div class="header">
+        <p>Plan No: {{plan.pk}}</p>
+        <h6>Campaign Name</h6>
+        <p>{{plan.client}} {% if plan.client.parent %}, {{plan.client.parent}} {% endif %}</p>
+        <p>Created: {{plan.created_at}}</p>
+      </div>
+      <div class="designs">
+        <div class="card-header"><h6>Visuals</h6></div>
+        <div class="card-body">
+          {% for design in plan.designs.all %}
+            <div class="design">
+              <div class="image-wrapper" style="background: url({{design.thumbnail}}"></div>
+              <p>{{design.name}}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="plan">
+        {% for week in curPlan.weeks %}
+          <div class="week" data-week="{{week.pk}}">
+            <div class="table-header">
+              <div><h6>Week {{forloop.counter}}</h6><p>{{week.week.start}}</p></div><p class="total">${{week.total}}</p>
+            </div>
+            <div class="table-body">
+              {% for ad in week.weekly %}
+                <div class="ad">
+                  <div><img src='{{ad.rate.publication.logo}}' /></div>
+                  <div>{{ad.rate.publication}}</div>
+                  <div>{{ad.rate.rateName}}</div>
+                  <div>{{ad.deadline}}</div>
+                  <div>{{ad.design}}</div>
+                  <div>${{ad.rate.price}}</div>
+                </div>
+              {% endfor %}
+              {% for ad in week.daily %}
+                <div class="ad">
+                  <div><img src='{{ad.ad.rate.publication.logo}}' /></div>
+                  <div>{{ad.ad.rate.publication}}</div>
+                  <div>{{ad.ad.rate.rateName}}</div>
+                  <div>{{ad.ad.days}}</div>
+                  <div>{{ad.ad.design}}</div>
+                  <div>${{ad.total}}</div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+
+        <div class="week">
+          <div class="table-header">
+            <div><h6>Full Campaign</h6></div><p class="total">${{curPlan.full.total}}</p>
+          </div>
+          <div class="table-body">
+            {% for ad in curPlan.full.ads %}
+                <div class="ad">
+                  <div><img src='{{ad.rate.publication.logo}}' /></div>
+                  <div>{{ad.rate.publication}}</div>
+                  <div>{{ad.rate.rateName}}</div>
+                  <div>{{ad.deadline}}</div>
+                  <div>{{ad.design}}</div>
+                  <div>${{ad.rate.price}}</div>
+                </div>            
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="week">
+          <div class="table-header">
+            <div><h6>Expenses</h6></div><p class="total">${{curPlan.expenses.total}}</p>
+          </div>
+          <div class="table-body">
+            {% for ad in curPlan.expenses.ads %}
+                <div class="ad">
+                  <div></div>
+                  <div>{{ad.name}}</div>
+                  <div></div>
+                  <div>{{ad.deadline}}</div>
+                  <div></div>
+                  <div>${{ad.total}}</div>
+                </div>            
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="week totals">
+          <div class="table-body">
+            {% for week in curPlan.weeks %}
+              <div class="ad">
+                <div>Week {{forloop.counter}} ({{week.week.start}})</div>
+                <div>${{week.total}}</div>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="table-header">
+            <div><h6>Grand Total</h6></div><p class="total">${{curPlan.total}}</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="design" class="tabcontent">
+    <div class="top-bar">
+      <h6>Status: {% if plan.status == 'design' or plan.status == 'approve' %}Awaiting Designs {% else %} Designs Uploaded {% endif %}</h6>
+       <div class="right">
+          <div class="designer">
+            <label>Assign Designer</label>
+             <div class="form-input input-field">
+                <input type="text" />
+            </div>
+          </div>
+          <select class="selectize">
+            <option value="send">Notify on Slack</option>
+            <option value="download">Download PDF</option>
+            <option value="complete">Mark Complete</option>
+            <option value="uncomplete">Mark Uncomplete</option>
+          </select>
+        </div>
+    </div>
+    <div class="main-card">
+      <div class="designs">
+        {% for design in plan.designs.all %}
+          <div class="card">
+            <div class="card-header">
+              <div class="image-wrapper" style="background-image: url({{design.thumbnail}})"></div>
+              <h6>{{design.name}}</h6>
+            </div>
+            <div class="card-body">
+              {% for ad in design.weekly_ads.all %}
+              <div class="ad">
+                <div>{{ad.rate.dimensions}}</div>
+                <div>{{ad.rate.bleed}}</div>
+                <div>{{ad.rate.rateName}}</div>
+                <div>{{ad.deadline}}</div>
+              </div>
+              {% endfor %}
+              {% for ad in design.daily_ads.all %}
+              <div class="ad">
+                <div>{{ad.rate.dimensions}}</div>
+                <div>{{ad.rate.bleed}}</div>
+                <div>{{ad.rate.rateName}}</div>
+                <div>{{ad.days}}</div>
+              </div>
+              {% endfor %}
+              {% for ad in design.full_ads.all %}
+              <div class="ad">
+                <div>{{ad.rate.dimensions}}</div>
+                <div>{{ad.rate.bleed}}</div>
+                <div>{{ad.rate.rateName}}</div>
+                <div>{{ad.deadline}}</div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </div>
+
+  <div id="book" class="tabcontent">
+
+    <div class="top-bar">
+      <h6>Status: {% if plan.status == 'approve' or plan.status == 'design' or plan.status == 'book' %}Pending Approval {% else %} Booked {% endif %}</h6>
+      <div class="right">
+          <div class="publication">
+            <select class="selectize pub">
+              {% for pub in pubs %}
+                <option value="{{pub.pk}}">{{pub.name}}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <select class="selectize action">
+            <option>Select Action</option>
+            <option value="download">Download PDF</option>
+            <option value="designs">Download Designs</option>
+            <option value="booked">Mark Booked</option>
+            <option value="sent">Mark Sent</option>
+          </select>
+        </div>
+    </div>
+    <div class="main-card">
+      <div class="designs">
+        <div class="card-header"><h6>Visuals</h6></div>
+        <div class="card-body">
+          {% for design in plan.designs.all %}
+            <div class="design">
+              <div class="image-wrapper" style="background: url({{design.thumbnail}}"></div>
+              <p>{{design.name}}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="plan">
+        {% for week in curPlan.weeks %}
+          <div class="week" data-week="{{week.pk}}">
+            <div class="table-header">
+              <div><h6>Week {{forloop.counter}}</h6><p>{{week.week.start}}</p></div>
+            </div>
+            <div class="table-body">
+              {% for ad in week.weekly %}
+                <div class="ad">
+                  <div><img src='{{ad.rate.publication.logo}}' /></div>
+                  <div>{{ad.rate.publication}}</div>
+                  <div>{{ad.rate.rateName}}</div>
+                  <div>{{ad.deadline}}</div>
+                  <div>{{ad.design}}</div>
+                  <div>{{ad.status}}</div>
+                </div>
+              {% endfor %}
+              {% for ad in week.daily %}
+                <div class="ad">
+                  <div><img src='{{ad.ad.rate.publication.logo}}' /></div>
+                  <div>{{ad.ad.rate.publication}}</div>
+                  <div>{{ad.ad.rate.rateName}}</div>
+                  <div>{{ad.ad.days}}</div>
+                  <div>{{ad.ad.design}}</div>
+                  <div>{{ad.ad.status}}</div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+
+        <div class="week">
+          <div class="table-header">
+            <div><h6>Full Campaign</h6></div>
+          </div>
+          <div class="table-body">
+            {% for ad in curPlan.full.ads %}
+                <div class="ad">
+                  <div><img src='{{ad.rate.publication.logo}}' /></div>
+                  <div>{{ad.rate.publication}}</div>
+                  <div>{{ad.rate.rateName}}</div>
+                  <div>{{ad.deadline}}</div>
+                  <div>{{ad.design}}</div>
+                  <div>{{ad.status}}</div>
+                </div>            
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="complete" class="tabcontent">
+    <h3>Tokyo</h3>
+    <p>Tokyo is the capital of Japan.</p>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+    <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script src="{% static 'js/selectize.min.js' %}"></script>
+    <script>
+      $(document).ready(function(){
+        status = '{{plan.status}}'
+        openTab(status)
+        console.log(status)
+
+        $('.tablinks').click(function(e){
+          var tab = $(this).data('open');
+          openTab(tab)
+        });
+
+        function openTab(tab) {
+          $('.tabcontent').css('display', 'none');
+          $('.tabcontent').removeClass('active');
+          $('.tablinks').removeClass('active');
+          $('.tablinks[data-open=' + tab + ']').addClass('active');
+
+          element = $('#' + tab);
+          element.css('display', 'block');
+          element.addClass('active');
+
+          switch (tab){
+            case 'design':
+              $('.tablinks').removeClass('done');
+              $('.tablinks[data-open=approve]').addClass('done');
+              break;
+            case 'book':
+              $('.tablinks').removeClass('done');
+              $('.tablinks[data-open=approve]').addClass('done');
+              $('.tablinks[data-open=design]').addClass('done');
+              break;
+            case 'complete':
+              $('.tablinks').removeClass('done');
+              $('.tablinks[data-open=approve]').addClass('done');
+              $('.tablinks[data-open=design]').addClass('done');
+              $('.tablinks[data-open=book]').addClass('done');
+              break;
+            default: 
+              $('.tablinks').removeClass('done');
+
+          }
+        }
+
+
+        function getToken() {
+          function getCookie(name) {
+              var cookieValue = null;
+              if (document.cookie && document.cookie !== '') {
+                  var cookies = document.cookie.split(';');
+                  for (var i = 0; i < cookies.length; i++) {
+                      var cookie = jQuery.trim(cookies[i]);
+                      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                          break;
+                      }
+                  }
+              }
+              return cookieValue;
+          }
+          var csrftoken = getCookie('csrftoken');
+          function csrfSafeMethod(method) {
+              return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+          }
+          return csrftoken;
+        }
+        function updateStatus(status){
+          var data = new FormData();
+          data.append('status', status);
+          $.ajax({
+            url: "{% url 'update_status' plan.pk %}",
+            data: data,
+            headers: {"X-CSRFToken": getToken()},
+            contentType: false,
+            cache: false,
+            processData: false,
+            method: 'POST'
+          }).done(function(data){
+            if(data.code == "200") {
+              console.log(data.plan)
+            }
+          })
+        }
+        function updatePubStatus(pub, status){
+          var data = new FormData();
+          data.append('status', status);
+          data.append('pub', pub);
+          $.ajax({
+            url: "{% url 'update_pub_status' plan.pk %}",
+            data: data,
+            headers: {"X-CSRFToken": getToken()},
+            contentType: false,
+            cache: false,
+            processData: false,
+            method: 'POST'
+          }).done(function(data){
+            if(data.code == "200") {
+              console.log(data.plan)
+              window.location.href=window.location.href;
+            }
+          })
+        }
+        $('#approve .selectize').selectize({
+            maxItems: 1,
+            onChange: function(value){
+              console.log(value)
+              switch (value) {
+                case 'download':
+                  window.location.href="{% url 'save_pdf' plan.pk %}"
+                  break;
+                case 'approve':
+                  updateStatus('design')
+                  break;
+                case 'unapprove':
+                  updateStatus('approve')
+                  break;
+              }
+            }
+          }
+        );
+
+        $('#design .selectize').selectize({
+            maxItems: 1,
+            onChange: function(value){
+              console.log(value)
+              switch (value) {
+                case 'send': 
+                  $.ajax({
+                    url: 'https://hooks.slack.com/services/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',
+                    data: '{"text": "<http://127.0.0.1:8000/plans/media-plans/{{plan.pk}}/design-pdf|Download Plan> @{{plan.designer}} Uplaod designs for {{plan.name}} "}',
+                    method: 'POST'
+                  }).done(function(data){
+                      console.log(data)
+                  });
+                  break;
+                case 'download':
+                  window.location.href="{% url 'design_pdf' plan.pk %}"
+                  break;
+                case 'complete':
+                  updateStatus('book');
+                  break;
+                case 'uncomplete':
+                  updateStatus('design');
+                  break;
+              }
+            }
+          }
+        );
+
+        $('#book .selectize.pub').selectize({
+            maxItems: 1
+        });
+        var bookSelect = $('#book .selectize.action').selectize({
+            maxItems: 1,
+            onChange: function(value){
+              var select = bookSelect[0].selectize;
+              var pub = $('#book .selectize.pub').val()
+              switch (value) {
+                case 'download':
+                  select.setValue('Select Action', false)
+                  window.location.href='/plans/media-plans/{{plan.pk}}/pdf/' + pub
+                  break;
+                case 'booked':
+                  updatePubStatus(pub, 'booked')
+                  break;
+                case 'sent':
+                  updatePubStatus(pub, 'sent')
+                  break;
+
+              }
+            }
+          }
+        );
+
+
+
+      })
+    </script>
+{% endblock %}
