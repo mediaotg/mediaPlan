@@ -64,13 +64,6 @@ input.has-inner {
     color: #d34e4e;
 }
 
-.selectize-input {
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  padding: 1em;
-}
-
-
 /* Sidebar */
 .sidebar.sticky {
   position: fixed;

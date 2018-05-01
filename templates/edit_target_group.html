@@ -37,17 +37,7 @@
     <div class="form-input input-field">
         {{ form.publications.label_tag }}
       <div class="pub-table-wrapper">
-        <div class="hidden">
-          {% render_field form.publications class="publication-multi" %}
-        </div>
-        <div class="pub-single">
-          <ul class="publications-wrapper">
-            {% for pub in group.publications.all %}
-                <li class="pub"><a href="#">x</a><span>{{ pub.name}}</span></li>
-            {% endfor %}
-          </ul>
-          <input class="awesome" value="" />
-        </div>
+          {% render_field form.publications class="selectize" %}
       </div>
       
       {% for error in form.publications.errors %}
@@ -144,6 +134,8 @@
               e.preventDefault();
               $.magnificPopup.close(); 
             });
+            
+            $('.selectize').selectize();
         })
     </script>
 {% endblock %}ß
