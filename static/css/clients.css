@@ -1,0 +1,276 @@
+/* Clients Stylesheet */
+
+/* Publications */
+.main-table td .image-wrapper {
+  margin: 0;
+  margin-right: 16px;
+}
+.main-table td a {
+  height: 30px;
+  margin: 0;
+}
+.main-table td:last-child:not(.dataTables_empty) {
+  width: 200px !important;
+  display: block;
+}
+.main-table .image-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+}
+.main-table .image-wrapper img {
+  max-width: 100%;
+}
+
+/* Delete Popup */
+#delete-popup .buttons-wrapper, #delete-popup p {
+  margin-top: 32px;
+}
+
+/* New Publication */
+.new-client .image-input input {
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: -1000px;
+}
+.new-client .image-input .image-input-label {
+  border: 1px solid #cfcfcf;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  position: relative;
+}
+.new-client .image-input .image-input-label .thumbnail {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  opacity: .5;
+}
+.new-client .image-input .dz-success .image-input-label .thumbnail {
+  opacity: 1;
+}
+
+.new-client .dz-success .loader {
+  display: none;
+}
+.loader {
+  display: block;
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  margin-top: 0;
+}
+
+
+.awesomplete {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+}
+.awesomplete > ul {
+    border-radius: 0;
+}
+.awesomplete > ul li {
+    padding: 8px;
+}
+
+.hidden {
+    display: none;
+}
+
+.selectize-input, .selectize-input.dropdown-active {
+  border-radius: 0;
+  box-shadow: none;
+  padding: 1em;
+}
+.selectize-dropdown .option {
+    padding: .8em;
+}
+
+.buttons-wrapper {
+  display: flex;
+}
+.button:disabled {
+    background: #9e9e9e;
+}
+.new-client .buttons-wrapper .button {
+    margin-left: 0;
+}
+
+/* Import */
+.white-popup {
+    padding: 48px;
+}
+.white-popup h2 {
+    margin-bottom: 36px;
+}
+.white-popup .buttons-wrapper {
+    display: flex;
+    margin-top: 16px;
+}
+.white-popup .buttons-wrapper button {
+    margin-right: 16px;
+}
+
+#import {
+    margin-right: 16px;
+}
+#import-form {
+    margin-top: 16px;
+    display: flex;
+}
+#fileselect {
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    position: absolute;
+    top: -100%;
+    left: -100%;
+}
+#fileselect-button {
+    text-transform: none;
+    flex-grow: 10;
+    text-align: left;
+}
+.button:disabled {
+    background: #9e9e9e;
+}
+#import-form-error {
+    color: #d34e4e;
+    font-weight: lighter;
+    margin-top: 8px;
+    font-size: .9em;
+}
+
+/* Pricing */
+#add-pricing {
+  font-size: 1em;
+  display: block;
+  margin-bottom: 16px;
+}
+.new-client .pricing {
+  max-width: 800px;
+  position: relative;
+  z-index: 0;
+  display: none;
+}
+.new-client .pricing h6 {
+  font-size: 1.2em;
+  font-weight: 800;
+  margin-bottom: 0;
+}
+#add-publication {
+  font-size: 1em;
+  display: block;
+  margin-bottom: 16px;
+}
+.new-client .publication-pricing {
+  margin-top: 16px;
+  margin-bottom: 32px;
+}
+.rate-line .form-input.error .awesomplete, .rate-line .form-input.error input{
+  border-color: #d34e4e;
+}
+.new-client .publication-pricing .form-input:first-child{
+  margin-top: 0;
+  position: relative;
+}
+.new-client .publication-pricing .delete-publication {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 1em;
+  text-decoration: none;
+  opacity: .5;
+  transition: .2s;
+  color: #d34d4e;
+}
+.new-client .pricing .publication .form-input {
+  margin-top: 8px;
+}
+
+.new-client .publication {
+  margin-bottom: 32px;
+}
+.new-client .rates-table .form-input {
+  position: relative;
+}
+
+.new-client .rate-line {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 5px 110px 110px 100px 100px 80px 100px;
+  justify-content: start;
+  align-items: center;
+  grid-gap: 24px;
+  margin-bottom: 16px;
+  z-index: 1;
+}
+.new-client .rate-line {
+  z-index: 10000;
+}
+.new-client .rate-line .form-input {
+  margin: 0;
+  height: 100%;
+}
+.new-client .rate-line .total-input input{
+  padding: 8px 8px 8px 16px;
+  background: #f0f0f0;
+}
+.new-client .inner-label {
+  position: absolute;
+  left: .5em;
+  top: .71em;
+}
+.new-client .rate-line .form-input {
+  margin: 0;
+  height: 100%;
+}
+.new-client .rate-line .wrapper-dropdown,  .new-client .rate-line .awesomplete input {
+  width: 100%;
+  padding: 8px;
+  background: #f0f0f0;
+}
+
+.rates-table-wrapper {
+  background: #ffffff;
+  border: 1px solid #cfcfcf;
+  padding: 24px;
+}
+.wrapper-dropdown.active, .form-input.active {
+  position: relative;
+  z-index: 101;
+}
+
+#add-pub {
+  display: none;
+  font-size: 1em;
+}
+
+.add-rate {
+  font-size: 1em;
+  text-decoration: none;
+}
+.delete-rate-line {
+  font-size: 1em;
+  text-decoration: none;
+  opacity: .1;
+  transition: .2s;
+  color: #d34d4e;
+}
+.delete-rate-line:hover {
+  opacity: 1;
+}
+

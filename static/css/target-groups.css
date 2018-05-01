@@ -1,0 +1,32 @@
+.table.striped-table.main-table .dataTable tbody tr td {
+    padding: 16px;
+}
+
+.awesomplete {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+}
+.awesomplete > ul {
+    border-radius: 0;
+}
+.awesomplete > ul li {
+    padding: 8px;
+}
+
+.publications-wrapper {
+    list-style: none;
+    margin-bottom: 16px;
+}
+.publications-wrapper a {
+    font-weight: normal;
+    font-size: 1em;
+    margin-right: .5em;
+    display: inline-block;
+    text-decoration: none;
+    color: #d34e4e;
+}
+
+.hidden {
+    display: none;
+}
