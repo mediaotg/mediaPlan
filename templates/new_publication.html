@@ -51,7 +51,7 @@
         {% render_field form.targetGroups class="selectize" %}
     </div>
 
-    <div class="form-input input-field">
+    <div class="form-input input-field recurrence">
         {{ form.recurrence.label_tag }}
         {% render_field form.recurrence class="selectize" %}
     </div>
@@ -126,7 +126,7 @@
               uploadFiles(parent, logoFile);
             });
 
-            var select = $(".selectize").selectize({
+            var select = $(".recurrence .selectize").selectize({
                 create: true,
                 sortField: 'text'
             });
