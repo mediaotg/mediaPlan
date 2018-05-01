@@ -72,60 +72,6 @@
     <script src="{% static 'js/selectize.min.js' %}"></script>
     <script>
         $(document).ready(function() {
-
-            // var pubs = [];
-            // {% for pub in publications %}
-            //     pubs.push({value: '{{ pub.name }}', label: '{{ pub.name }}', pk: '{{ pub.pk }}'})
-            // {% endfor %}
-
-            // var item = $('.pub-table-wrapper .awesome')[0];
-            // var list = [];
-            // {% for pub in group.publications.all %}
-            //     list.push("{{ pub.name}}");
-            // {% endfor %}
-
-            // var awe = new Awesomplete(item, {
-            //     list: pubs,
-            //     filter: function(text, input) {
-            //         var match = Awesomplete.FILTER_CONTAINS(text, input.match(/[^,]*$/)[0]);
-
-            //         var listIndex = list.indexOf(text.label);
-            //         if (listIndex > -1) {
-            //             return false;
-            //         } 
-
-            //         var values = input.split(",");
-            //         $.each(values, function(index, value){
-            //             if(text.label == value){
-            //                 return false
-            //             }
-            //         })
-            //         return match;
-            //     },
-
-            //     item: function(text, input) {
-            //         return Awesomplete.ITEM(text, input.match(/[^,]*$/)[0]);
-            //     },
-
-            //     replace: function(text) {
-            //         list.push(text.label);
-            //         $('.publications-wrapper').append('<li class="pub"><a href="#">x</a><span>' + text + '</span></li>');
-            //         $('.publication-multi option').filter(function () { return $(this).html() == text; }).attr('selected', 'selected');
-            //     }
-            // });
-
-            // $('.publications-wrapper').on('click', '.pub a', (function(e){
-            //     e.preventDefault();
-
-            //     var item = $(this).siblings('span').text();
-            //     var index = list.indexOf(item);
-            //     list.splice(index, 1);
-
-            //     $(this).parent('li').remove();
-            //     $('.publication-multi option').filter(function () { return $(this).html() == item; }).removeAttr('selected');
-            // }));
-
-
             // Delete 
             $('#delete-group').magnificPopup({
               type: 'inline',
@@ -136,7 +82,7 @@
               e.preventDefault();
               $.magnificPopup.close(); 
             });
-            
+
             $('.selectize').selectize();
         })
     </script>

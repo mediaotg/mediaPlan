@@ -13,10 +13,6 @@
       <input type="text" class="searchbar-input" placeholder="Search" />
       <a href="#" class="search-button"><i class="fas fa-search"></i></a>
     </div> 
-    <div class="buttons-wrapper">
-      <a href="#import-popup" class="button" id="import">Import</a>
-      <a href="{% url 'new_plan' %}" class="button" id="new-plan">New Plan</a>
-    </div>
 </div>
 <div class="cards-wrapper">
     {% for plan in plans %}
