@@ -12,6 +12,10 @@ from .resources import TargetGroupResource, PublicationResource, ClientResource
 from .forms import GroupForm, PublicationForm, ClientForm
 from .models import TargetGroup, Publication, Image, Client, Rate
 
+# Home
+def homeView(request):
+    return render(request, 'home.html')
+    
 # Target Groups
 class TargetGroupsView(ListView):
     model = TargetGroup

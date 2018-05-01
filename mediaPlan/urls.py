@@ -23,6 +23,7 @@ from plans import views as plans_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('/', setup_views.homeView, name='home'),
 
     #setup
     path('setup/target-groups', setup_views.TargetGroupsView.as_view(), name='target_groups'),
