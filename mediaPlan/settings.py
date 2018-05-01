@@ -143,6 +143,3 @@ STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
 MEDIA_URL = '/uploads/'
 IMPORT_EXPORT_USE_TRANSACTIONS = True
-
-django_heroku.settings(locals())
-
