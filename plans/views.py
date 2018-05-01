@@ -76,7 +76,7 @@ def editPlanView(request, pk):
     plan = get_object_or_404(MediaPlan, pk=pk)
     clients = Client.objects.all()
     groups = TargetGroup.objects.all()
-    data = {'name': plan.name, 'client': plan.client, 'budget': plan.budget, 'dates': plan.dates, 'audience': plan.audience, 'designer': plan.designer}
+    data = {'name': plan.name, 'client': plan.client, 'budget': plan.budget, 'dates': str(plan.startDate) + ' to ' + str(plan.endDate), 'audience': plan.audience, 'designer': plan.designer}
     if request.method == 'POST':
         form = PlanForm(request.POST, instance=plan)
         if form.is_valid():
