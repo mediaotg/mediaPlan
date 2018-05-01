@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{% static 'css/awesomplete.css' %}">
 <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
 <link rel="stylesheet" href="{% static 'css/target-groups.css' %}">
+<link rel="stylesheet" href="{% static 'css/selectize.css' %}">
 {% endblock %}
 
 {% block title %}{{ group.name }}{% endblock %}
@@ -68,6 +69,7 @@
 {% block javascript %}
     <script src="{% static 'js/awesomplete.min.js' %}"></script>
     <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+    <script src="{% static 'js/selectize.min.js' %}"></script>
     <script>
         $(document).ready(function() {
 
