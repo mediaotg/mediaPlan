@@ -86,6 +86,7 @@
             {{ error }}
           </div> 
         {% endfor %}
+      </div>
     </div>
 
     <div class="form-input input-field recurrence">
@@ -137,7 +138,6 @@
         $(document).ready(function() {
             var logo = $('#logo-hidden-input');
             var deleteRates = [];
-            $('.target-groups .selectize').selectize();
 
             /* Logo */
             if(logo.val().length > 1){
@@ -179,6 +179,7 @@
               uploadFiles(parent, logoFile);
             });
 
+            $('.target-groups .selectize').selectize();
             var select = $(".recurrence .selectize").selectize({
                 create: true,
                 sortField: 'text'
