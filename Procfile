@@ -1,0 +1,1 @@
+web: gunicorn mediaPlan.wsgi --log-file -
