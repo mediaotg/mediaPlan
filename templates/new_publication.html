@@ -46,17 +46,9 @@
         {% render_field form.phone %}
     </div>
 
-    <div class="form-input input-field">
+    <div class="form-input input-field target-groups">
         {{ form.targetGroups.label_tag }}
-      <div class="group-table-wrapper">
-        <div class="hidden">
-        </div>
-        <div class="group-single">
-          <ul class="groups-wrapper">
-          </ul>
-          <input class="awesome" value="" />
-        </div>
-      </div>
+        {% render_field form.targetGroups class="selectize" %}
     </div>
 
     <div class="form-input input-field">
@@ -92,58 +84,7 @@
             var logo = $('#logo-hidden-input');
 
             /* Target Groups */
-            var groups = [];
-            {% for group in groups %}
-                groups.push({value: '{{ group.name }}', label: '{{ group.name }}', pk: '{{ group.pk }}'})
-            {% endfor %}
-
-            var item = $('.group-table-wrapper .awesome')[0];
-            var list = [];
-
-            var awe = new Awesomplete(item, {
-                list: groups,
-                filter: function(text, input) {
-                    var match = Awesomplete.FILTER_CONTAINS(text, input.match(/[^,]*$/)[0]);
-
-                    var listIndex = list.indexOf(text.label);
-                    if (listIndex > -1) {
-                        return false;
-                    } 
-
-                    var values = input.split(",");
-                    $.each(values, function(index, value){
-                        if(text.label == value){
-                            return false
-                        }
-                    })
-                    return match;
-                },
-
-                item: function(text, input) {
-                    return Awesomplete.ITEM(text, input.match(/[^,]*$/)[0]);
-                },
-
-                replace: function(text) {
-                    list.push(text.label);
-                    $('.groups-wrapper').append('<li class="group"><a href="#">x</a><span>' + text + '</span></li>');
-                    $('.target-multi option').filter(function () { return $(this).html() == text; }).attr('selected', 'selected');
-                }
-            });
-            Awesomplete.$.bind(item, { "awesomplete-open":function(event) {
-              $('.awe').removeClass('active');
-              $(item).closest('.form-input').addClass('active');
-            }});
-
-            $('.groups-wrapper').on('click', '.group a', (function(e){
-                e.preventDefault();
-
-                var item = $(this).siblings('span').text();
-                var index = list.indexOf(item);
-                list.splice(index, 1);
-
-                $(this).parent('li').remove();
-                $('.target-multi option').filter(function () { return $(this).html() == item; }).removeAttr('selected');
-            }));
+            $('.target-groups .selectize').selectize()
             
             /* Phone */
             function phoneMask() { 
