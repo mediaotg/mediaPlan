@@ -1,1 +1,1 @@
-web: gunicorn mediaPlan:app
+web: gunicorn mediaPlan.wsgi --log-file -
