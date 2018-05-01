@@ -87,7 +87,7 @@ def editPlanView(request, pk):
             for group in audience:
                 plan.audience.add(TargetGroup.objects.get(pk=group))
 
-            dateStr = str(plan.dates).split(' to ')
+            dateStr = str(data['dates']).split(' to ')
             dates = []
             weeks = []
             for date in dateStr:
