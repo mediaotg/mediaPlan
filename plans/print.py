@@ -51,7 +51,7 @@ class PdfPrint():
 
         styles.add(ParagraphStyle(name='line', parent=styles['BodyText'], spaceBefore=0))
         styles.add(ParagraphStyle(name='campaign-name', parent=styles['h4'], spaceBefore=0, spaceAfter=0, fontName='Helvetica-Bold'))
-        image = Image('/Users/estyrosenberg/Desktop/MediaPlan/mediaPlan/mediaPlan/static/img/mediaotg-small.png', 122.25, 31.75)
+        image = Image('http://mediaplan.herokuapp.com/static/img/mediaotg-small.png', 122.25, 31.75)
         image.hAlign = 'LEFT'
         Elements.append(Spacer(width=0, height=.25*inch))
         Elements.append(image)

@@ -70,16 +70,30 @@
         {% endfor %}
       </div>
 
-      <div class="form-input input-field {% if form.dates.errors %}invalid{% endif %}">
-        {{ form.dates.label_tag }}
-        {% render_field form.dates class="date-picker" %}
+      <div class="line-wrapper">
+        <div class="form-input input-field {% if form.startDate.errors %}invalid{% endif %}">
+          {{ form.startDate.label_tag }}
+          {% render_field form.startDate class="date-picker start" %}
 
-        {% for error in form.dates.errors %}
-          <div class="invalid-feedback err-msg">
-            {{ error }}
-          </div> 
-        {% endfor %}
+          {% for error in form.startDate.errors %}
+            <div class="invalid-feedback err-msg">
+              {{ error }}
+            </div> 
+          {% endfor %}
+        </div>
+        <div class="line-spacer"></div>
+        <div class="form-input input-field {% if form.endDate.errors %}invalid{% endif %}">
+          {{ form.endDate.label_tag }}
+          {% render_field form.endDate class="date-picker end" %}
+
+          {% for error in form.endDate.errors %}
+            <div class="invalid-feedback err-msg">
+              {{ error }}
+            </div> 
+          {% endfor %}
+        </div>
       </div>
+
 
       <div class="form-input input-field">
           {{ form.audience.label_tag }}
@@ -148,9 +162,42 @@
           });
 
           // Date Picker
-          $('.date-picker').dateRangePicker({
+          $('.date-picker').focus(function(e){
+            $('.date-picker').data('dateRangePicker').close()
+            $(this).data('dateRangePicker').open()
+          })
+
+          $('.date-picker.end').dateRangePicker({
             autoClose: true,
-            format: 'dddd MMM DD, YYYY'
+            singleDate: true,
+            format: 'YYYY-MM-DD',    
+            showShortcuts: false,
+            singleMonth: true,
+            showTopbar: false
+          })
+
+          var startPicker = $('.date-picker.start').dateRangePicker({
+            autoClose: true,
+            singleDate: true,
+            format: 'YYYY-MM-DD',    
+            showShortcuts: false,
+            singleMonth: true,
+            showTopbar: false
+          }).bind('datepicker-change', function(ev, picker){
+            $('.date-picker.end').data('dateRangePicker').destroy()
+
+            $('.date-picker.end').dateRangePicker({
+              autoClose: true,
+              singleDate: true,
+              format: 'YYYY-MM-DD',    
+              showShortcuts: false,
+              singleMonth: true,
+              showTopbar: false,
+              startDate: picker.value
+            })
+
+            $('.date-picker.end').data('dateRangePicker').open()
+            console.log(picker.value)
           });
 
             /* Target Groups */
