@@ -87,11 +87,8 @@ def editPlanView(request, pk):
             for group in audience:
                 plan.audience.add(TargetGroup.objects.get(pk=group))
 
-            dateStr = str(data['dates']).split(' to ')
-            dates = []
+            dates = [plan.startDate, plan.endDate]
             weeks = []
-            for date in dateStr:
-                dates.append(datetime.strptime(date,"%A %b %d, %Y").date())
 
             def daterange(date1, date2, intv):
                 diff = (date2 - date1) / intv
