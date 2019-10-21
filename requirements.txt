@@ -33,7 +33,7 @@ slackclient==1.2.1
 tablib==0.12.1
 tinycss2==0.6.1
 unicodecsv==0.14.1
-urllib3==1.22
+urllib3==1.24.2
 virtualenv==15.2.0
 virtualenv-clone==0.3.0
 webencodings==0.5.1
